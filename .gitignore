@@ -1,0 +1,21 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+
+# PyInstaller build outputs
+build/
+dist/
+
+# User local runtime data
+config.json
+custom_hands/*
+!custom_hands/.gitkeep
+custom_sounds/*
+!custom_sounds/.gitkeep
+
+# IDE / OS
+.vscode/
+.idea/
+Thumbs.db
+.DS_Store
