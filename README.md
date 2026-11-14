@@ -1,5 +1,12 @@
 # Wajji TinyHand PRO (Windows Edition)
 
+[![Windows 10/11](https://img.shields.io/badge/Platform-Windows%2010%20%7C%2011-0078D6?logo=windows&logoColor=white)](https://github.com/wajahat-alip/wajji-tinyhand-pro)
+[![Release](https://img.shields.io/github/v/release/wajahat-alip/wajji-tinyhand-pro?color=3B82F6&label=Download%20v1.0.0)](https://github.com/wajahat-alip/wajji-tinyhand-pro/releases)
+[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)
+[![Web Showcase](https://img.shields.io/badge/Web%20Showcase-Live%20Demo-blue)](https://wajahat-alip.github.io/wajji-tinyhand-pro/)
+
+> **Website & Interactive Demo**: [https://wajahat-alip.github.io/wajji-tinyhand-pro/](https://wajahat-alip.github.io/wajji-tinyhand-pro/)
+
 A polished, zero-lag, permanently click-through Windows native presentation pointer inspired by `nilbuild/tinyhand`, featuring telescopic rod kinematics, all 36 original 3D hand styles, custom animated pointers, smooth vector ink trails with Chaikin line stabilization, auditorium spotlight mode, a frosted-glass HUD capsule, and the custom **Obsidian Studio** settings suite.
 
 ---
