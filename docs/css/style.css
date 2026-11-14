@@ -66,14 +66,104 @@ html {
 
 body {
   background-color: var(--bg-page);
-  background-image: 
-    radial-gradient(1000px 500px at 50% -50px, rgba(37, 99, 235, 0.16) 0%, transparent 80%),
-    radial-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px);
-  background-size: 100% 100%, 32px 32px;
-  background-position: top center, center top;
   min-height: 100vh;
   line-height: 1.6;
   overflow-x: hidden;
+  position: relative;
+}
+
+/* Background Canvas */
+#bgCanvas {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Content Layer */
+.nav-wrap, main, .hero, .section, .footer {
+  position: relative;
+  z-index: 2;
+}
+
+/* Atmospheric Aurora Horizon Beam */
+.hero::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(1000px, 95vw);
+  height: 480px;
+  background: radial-gradient(ellipse at 50% 10%, rgba(37, 99, 235, 0.28) 0%, rgba(96, 165, 250, 0.12) 40%, rgba(16, 185, 129, 0.03) 70%, transparent 85%);
+  pointer-events: none;
+  z-index: -1;
+  filter: blur(20px);
+}
+
+/* Floating 3D Hand Parallax Orbs (Motion Graphics) */
+.floating-decor-layer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: visible;
+  z-index: 1;
+}
+
+.floating-decor {
+  position: absolute;
+  pointer-events: none;
+  filter: drop-shadow(0 20px 40px rgba(0, 0, 0, 0.85));
+  will-change: transform;
+  transition: transform 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+  animation: float-drift 7s ease-in-out infinite alternate;
+}
+
+.decor-1 {
+  top: 100px;
+  left: calc(50% - 660px);
+  width: 145px;
+  opacity: 0.9;
+  animation-duration: 6.5s;
+}
+
+.decor-2 {
+  top: 80px;
+  right: calc(50% - 670px);
+  width: 140px;
+  opacity: 0.9;
+  animation-duration: 8s;
+  animation-delay: -3s;
+}
+
+.decor-3 {
+  top: 480px;
+  left: calc(50% - 650px);
+  width: 125px;
+  opacity: 0.75;
+  animation-duration: 7.5s;
+  animation-delay: -4.5s;
+}
+
+.decor-4 {
+  top: 460px;
+  right: calc(50% - 650px);
+  width: 125px;
+  opacity: 0.75;
+  animation-duration: 9s;
+  animation-delay: -2s;
+}
+
+@keyframes float-drift {
+  0% { transform: translateY(0px) rotate(0deg); }
+  50% { transform: translateY(-18px) rotate(3deg); }
+  100% { transform: translateY(8px) rotate(-3deg); }
+}
+
+@media (max-width: 1280px) {
+  .floating-decor-layer { display: none; }
 }
 
 /* Custom Scrollbar */
@@ -205,7 +295,7 @@ body {
 .btn-keycap-primary {
   background: linear-gradient(180deg, #3B82F6 0%, #2563EB 100%);
   color: #FFFFFF;
-  border-top: 1px solid rgba(255, 255, 255, 0.3);
+  border-top: 1px solid rgba(255, 255, 255, 0.35);
   border-left: 1px solid rgba(255, 255, 255, 0.15);
   border-right: 1px solid rgba(255, 255, 255, 0.15);
   border-bottom: 1px solid #1D4ED8;
@@ -220,6 +310,55 @@ body {
 .btn-keycap-primary:active {
   transform: translateY(2px);
   box-shadow: 0 1px 0 #1D4ED8, 0 4px 10px rgba(37, 99, 235, 0.3);
+}
+
+/* Rotating Electric Aura Glow */
+.btn-aura {
+  position: relative;
+  isolation: isolate;
+}
+.btn-aura::before {
+  content: "";
+  position: absolute;
+  inset: -4px;
+  border-radius: calc(var(--r-btn) + 4px);
+  background: conic-gradient(from 0deg, #3B82F6, #60A5FA, #2563EB, #1D4ED8, #60A5FA, #3B82F6);
+  z-index: -1;
+  filter: blur(14px);
+  opacity: 0.7;
+  animation: aura-spin 5s linear infinite;
+  transition: opacity 0.3s ease;
+}
+.btn-aura:hover::before {
+  opacity: 1;
+  filter: blur(18px);
+}
+@keyframes aura-spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Audio Waveform Equalizer (Motion Graphic) */
+.audio-wave {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  height: 14px;
+  margin-right: 4px;
+}
+.audio-wave span {
+  width: 2.5px;
+  height: 100%;
+  background: #10B981;
+  border-radius: 99px;
+  animation: wave-bounce 0.8s ease-in-out infinite alternate;
+}
+.audio-wave span:nth-child(2) { animation-delay: 0.18s; }
+.audio-wave span:nth-child(3) { animation-delay: 0.36s; }
+.audio-wave span:nth-child(4) { animation-delay: 0.12s; }
+.audio-wave span:nth-child(5) { animation-delay: 0.28s; }
+@keyframes wave-bounce {
+  0% { height: 25%; }
+  100% { height: 100%; }
 }
 
 .btn-secondary {
