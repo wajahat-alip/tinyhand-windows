@@ -247,6 +247,9 @@ class InteractivePointerStage {
 
     ctx.clearRect(0, 0, w, h);
 
+    // 0. Render Presentation Slide Mockup
+    this.renderSlideMockup(ctx, w, h);
+
     // 1. Draw Inks
     this.renderInk(ctx);
 
@@ -265,6 +268,97 @@ class InteractivePointerStage {
     this.renderBubbles(ctx);
 
     requestAnimationFrame(this.loop);
+  }
+
+  renderSlideMockup(ctx, w, h) {
+    const sw = Math.min(w - 60, 660);
+    const sh = Math.min(h - 100, 310);
+    const sx = (w - sw) / 2;
+    const sy = (h - sh) / 2 - 15;
+
+    ctx.save();
+
+    // Slide Card Ground
+    ctx.fillStyle = '#0F131D';
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.08)';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.roundRect(sx, sy, sw, sh, 14);
+    ctx.fill();
+    ctx.stroke();
+
+    // Slide Header Bar
+    ctx.fillStyle = '#141A26';
+    ctx.beginPath();
+    ctx.roundRect(sx, sy, sw, 42, [14, 14, 0, 0]);
+    ctx.fill();
+
+    // Slide Header Title
+    ctx.fillStyle = '#94A3B8';
+    ctx.font = '500 12px "JetBrains Mono", monospace';
+    ctx.textAlign = 'left';
+    ctx.fillText('SLIDE 01 // ARCHITECTURE & KINEMATICS', sx + 18, sy + 26);
+
+    // Slide Headline
+    ctx.fillStyle = '#FFFFFF';
+    ctx.font = '700 20px "Familjen Grotesk", sans-serif';
+    ctx.fillText('Zero-Lag Win32 Presentation Pointer', sx + 22, sy + 80);
+
+    // Slide Subtitle
+    ctx.fillStyle = '#64748B';
+    ctx.font = '400 13px "Inter", sans-serif';
+    ctx.fillText('Move the 3D hand cursor across elements. Click anywhere to test tactile pop feedback.', sx + 22, sy + 104);
+
+    // Two Demo Metric Panels inside Slide
+    const pw = (sw - 60) / 2;
+    const ph = 120;
+    const py = sy + 130;
+
+    // Panel 1: Hand Tracking
+    const p1x = sx + 20;
+    ctx.fillStyle = '#141824';
+    ctx.strokeStyle = 'rgba(37, 99, 235, 0.25)';
+    ctx.beginPath();
+    ctx.roundRect(p1x, py, pw, ph, 10);
+    ctx.fill();
+    ctx.stroke();
+
+    ctx.fillStyle = '#60A5FA';
+    ctx.font = '600 12px "JetBrains Mono", monospace';
+    ctx.fillText('FEATURE // 01', p1x + 14, py + 26);
+
+    ctx.fillStyle = '#FFFFFF';
+    ctx.font = '700 15px "Familjen Grotesk", sans-serif';
+    ctx.fillText('36 3D Tactile Hands', p1x + 14, py + 52);
+
+    ctx.fillStyle = '#94A3B8';
+    ctx.font = '400 12px "Inter", sans-serif';
+    ctx.fillText('Sub-pixel 60 FPS tracking', p1x + 14, py + 74);
+    ctx.fillText('Click to switch styles below', p1x + 14, py + 94);
+
+    // Panel 2: Click Test Target
+    const p2x = sx + 40 + pw;
+    ctx.fillStyle = '#141824';
+    ctx.strokeStyle = 'rgba(16, 185, 129, 0.25)';
+    ctx.beginPath();
+    ctx.roundRect(p2x, py, pw, ph, 10);
+    ctx.fill();
+    ctx.stroke();
+
+    ctx.fillStyle = '#10B981';
+    ctx.font = '600 12px "JetBrains Mono", monospace';
+    ctx.fillText('INTERACTIVE TARGET', p2x + 14, py + 26);
+
+    ctx.fillStyle = '#FFFFFF';
+    ctx.font = '700 15px "Familjen Grotesk", sans-serif';
+    ctx.fillText('Click Me for Sound FX', p2x + 14, py + 52);
+
+    ctx.fillStyle = '#94A3B8';
+    ctx.font = '400 12px "Inter", sans-serif';
+    ctx.fillText('Triggers BOOP & POP bubbles', p2x + 14, py + 74);
+    ctx.fillText('Plays acoustic WAV tap', p2x + 14, py + 94);
+
+    ctx.restore();
   }
 
   renderSpotlight(ctx, w, h) {

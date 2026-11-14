@@ -90,7 +90,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // 3. Render Hand Gallery Grid
   const galleryGrid = document.getElementById('galleryGrid');
-  const filterPills = document.querySelectorAll('.filter-pill');
+  const filterTabs = document.querySelectorAll('.filter-tab');
 
   function renderGallery(filter = 'all') {
     if (!galleryGrid) return;
@@ -111,14 +111,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
     items.forEach(item => {
       const card = document.createElement('div');
-      card.className = `hand-card ${heroStage.activeHand === item.id ? 'selected' : ''}`;
+      card.className = `hand-tile ${heroStage.activeHand === item.id ? 'selected' : ''}`;
       card.dataset.id = item.id;
 
       if (item.category === 'fx') {
         card.innerHTML = `
-          <div style="font-size: 48px; height: 76px; display: flex; align-items: center; justify-content: center; margin-bottom: 10px;">${item.icon}</div>
-          <div class="hand-name">${item.name}</div>
-          <div class="hand-badge">Vector FX</div>
+          <div style="font-size: 46px; height: 78px; display: flex; align-items: center; justify-content: center; margin-bottom: 8px;">${item.icon}</div>
+          <div class="hand-tile-name">${item.name}</div>
+          <div class="hand-tile-sub">Vector FX</div>
         `;
       } else {
         card.innerHTML = `
@@ -126,13 +126,13 @@ document.addEventListener('DOMContentLoaded', () => {
             <source srcset="assets/hands/hand_${item.id}.webp" type="image/webp">
             <img src="assets/hands/hand_${item.id}.png" alt="${item.name}" loading="lazy">
           </picture>
-          <div class="hand-name">${item.name}</div>
-          <div class="hand-badge">3D Model</div>
+          <div class="hand-tile-name">${item.name}</div>
+          <div class="hand-tile-sub">3D Model</div>
         `;
       }
 
       card.addEventListener('click', () => {
-        document.querySelectorAll('.hand-card').forEach(c => c.classList.remove('selected'));
+        document.querySelectorAll('.hand-tile').forEach(c => c.classList.remove('selected'));
         card.classList.add('selected');
 
         heroStage.setHand(item.id);
@@ -156,12 +156,12 @@ document.addEventListener('DOMContentLoaded', () => {
   // Initial gallery render
   renderGallery('all');
 
-  // Filter Pills listener
-  filterPills.forEach(pill => {
-    pill.addEventListener('click', () => {
-      filterPills.forEach(p => p.classList.remove('active'));
-      pill.classList.add('active');
-      renderGallery(pill.dataset.filter);
+  // Filter Tabs listener
+  filterTabs.forEach(tab => {
+    tab.addEventListener('click', () => {
+      filterTabs.forEach(p => p.classList.remove('active'));
+      tab.classList.add('active');
+      renderGallery(tab.dataset.filter);
     });
   });
 
