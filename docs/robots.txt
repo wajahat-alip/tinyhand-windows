@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://wajahat-alip.github.io/wajji-tinyhand-pro/sitemap.xml
