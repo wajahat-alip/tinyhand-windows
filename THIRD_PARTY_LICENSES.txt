@@ -1,7 +1,7 @@
 THIRD-PARTY LICENSES
 ====================
 
-Wajji TinyHand PRO includes assets originally from the TinyHand project,
+TinyHand Windows includes assets originally from the TinyHand project,
 used under the MIT License.
 
 ---
@@ -31,6 +31,6 @@ THE SOFTWARE.
 
 ---
 
-Wajji TinyHand PRO is an independent Windows port and original application
+TinyHand Windows is an independent Windows port and original application
 built from the ground up for Windows. It is not affiliated with or endorsed
 by the original TinyHand project or its author.

@@ -1,14 +1,14 @@
 @echo off
-title Wajji TinyHand PRO
+title TinyHand Windows
 cd /d "%~dp0"
 
 set "PY_EXE=C:\Users\PC\AppData\Local\hermes\hermes-agent\venv\Scripts\python.exe"
 
 if exist "%PY_EXE%" (
-    echo Starting Wajji TinyHand PRO with virtual environment Python...
+    echo Starting TinyHand Windows with virtual environment Python...
     "%PY_EXE%" main.py
 ) else (
-    echo Starting Wajji TinyHand PRO with system Python...
+    echo Starting TinyHand Windows with system Python...
     python main.py
 )
 

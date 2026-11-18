@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Persistent Configuration Manager for Wajji TinyHand PRO.
+Persistent Configuration Manager for TinyHand Windows.
 JSON-based settings with Windows startup integration.
 """
 
@@ -11,7 +11,7 @@ import winreg
 from typing import Any, Dict, List, Optional
 
 
-APP_NAME = "Wajji TinyHand PRO"
+APP_NAME = "TinyHand Windows"
 APP_VERSION = "1.0.0"
 
 
@@ -26,7 +26,7 @@ def get_data_dir() -> str:
     """Return writable data directory for config.json and custom assets."""
     if getattr(sys, "frozen", False):
         local_app = os.environ.get("LOCALAPPDATA") or os.path.dirname(sys.executable)
-        data_dir = os.path.join(local_app, "WajjiTinyHandPRO")
+        data_dir = os.path.join(local_app, "TinyHandWindows")
         os.makedirs(data_dir, exist_ok=True)
         return data_dir
     return os.path.dirname(os.path.abspath(__file__))
@@ -71,7 +71,7 @@ DEFAULTS: Dict[str, Any] = {
 
 
 class Config:
-    """Persistent JSON config manager for Wajji TinyHand PRO."""
+    """Persistent JSON config manager for TinyHand Windows."""
 
     def __init__(self, app_dir: str):
         self.app_dir = app_dir

@@ -1,5 +1,5 @@
 /**
- * Wajji TinyHand PRO — Landing Page Main Controller
+ * TinyHand Windows — Landing Page Main Controller
  */
 
 // Full Catalog of 36 3D Hands + 4 Vector FX

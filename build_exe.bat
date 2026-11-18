@@ -1,5 +1,5 @@
 @echo off
-title Build WajjiTinyHandPRO.exe
+title Build TinyHandWindows.exe
 cd /d "%~dp0"
 
 set "PY_EXE=C:\Users\PC\AppData\Local\hermes\hermes-agent\venv\Scripts\python.exe"
@@ -11,8 +11,8 @@ echo Cleaning previous build artifacts...
 if exist build rmdir /s /q build
 if exist dist rmdir /s /q dist
 
-echo Building standalone WajjiTinyHandPRO.exe...
-"%PY_EXE%" -m PyInstaller --clean --noconfirm WajjiTinyHandPRO.spec
+echo Building standalone TinyHandWindows.exe...
+"%PY_EXE%" -m PyInstaller --clean --noconfirm TinyHandWindows.spec
 
 if errorlevel 1 (
     echo.
@@ -22,5 +22,5 @@ if errorlevel 1 (
 
 echo.
 echo ========================================================
-echo Build succeeded: %~dp0dist\WajjiTinyHandPRO.exe
+echo Build succeeded: %~dp0dist\TinyHandWindows.exe
 echo ========================================================

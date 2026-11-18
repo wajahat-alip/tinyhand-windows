@@ -1,5 +1,5 @@
 /**
- * Wajji TinyHand PRO — Cinematic Motion Graphics & Ambient Background Engine
+ * TinyHand Windows — Cinematic Motion Graphics & Ambient Background Engine
  * Implements MotionSites techniques: Fluid interactive nebula, constellation mesh, and parallax depth
  */
 

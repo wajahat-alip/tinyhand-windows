@@ -1,5 +1,5 @@
 /**
- * Wajji TinyHand PRO — Interactive Canvas Pointer Engine
+ * TinyHand Windows — Interactive Canvas Pointer Engine
  * High-performance 60 FPS HTML5 Canvas Telescopic Arm & 3D Hand Simulator
  */
 

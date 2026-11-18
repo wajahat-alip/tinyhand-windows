@@ -1,11 +1,11 @@
-# Wajji TinyHand PRO (Windows Edition)
+# TinyHand Windows (Desktop Edition)
 
-[![Windows 10/11](https://img.shields.io/badge/Platform-Windows%2010%20%7C%2011-0078D6?logo=windows&logoColor=white)](https://github.com/wajahat-alip/wajji-tinyhand-pro)
-[![Release](https://img.shields.io/github/v/release/wajahat-alip/wajji-tinyhand-pro?color=3B82F6&label=Download%20v1.0.0)](https://github.com/wajahat-alip/wajji-tinyhand-pro/releases)
+[![Windows 10/11](https://img.shields.io/badge/Platform-Windows%2010%20%7C%2011-0078D6?logo=windows&logoColor=white)](https://github.com/wajahat-alip/tinyhand-windows)
+[![Release](https://img.shields.io/github/v/release/wajahat-alip/tinyhand-windows?color=3B82F6&label=Download%20v1.0.0)](https://github.com/wajahat-alip/tinyhand-windows/releases)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)
-[![Web Showcase](https://img.shields.io/badge/Web%20Showcase-Live%20Demo-blue)](https://wajahat-alip.github.io/wajji-tinyhand-pro/)
+[![Web Showcase](https://img.shields.io/badge/Web%20Showcase-Live%20Demo-blue)](https://wajahat-alip.github.io/tinyhand-windows/)
 
-> **Website & Interactive Demo**: [https://wajahat-alip.github.io/wajji-tinyhand-pro/](https://wajahat-alip.github.io/wajji-tinyhand-pro/)
+> **Website & Interactive Demo**: [https://wajahat-alip.github.io/tinyhand-windows/](https://wajahat-alip.github.io/tinyhand-windows/)
 
 A polished, zero-lag, permanently click-through Windows native presentation pointer inspired by `nilbuild/tinyhand`, featuring telescopic rod kinematics, all 36 original 3D hand styles, custom animated pointers, smooth vector ink trails with Chaikin line stabilization, auditorium spotlight mode, a frosted-glass HUD capsule, and the custom **Obsidian Studio** settings suite.
 
@@ -44,7 +44,7 @@ A polished, zero-lag, permanently click-through Windows native presentation poin
 ## How to Run
 
 ### Standalone Executable (Recommended for End Users)
-Double-click **`dist\WajjiTinyHandPRO.exe`** — zero Python installation required. Settings and custom uploads are stored in `%LOCALAPPDATA%\WajjiTinyHandPRO\`.
+Double-click **`dist\TinyHandWindows.exe`** — zero Python installation required. Settings and custom uploads are stored in `%LOCALAPPDATA%\TinyHandWindows\`.
 
 ### From Source (Development)
 Double-click **`run.bat`** in `C:\Users\PC\.gemini\antigravity\scratch\tinyhand-windows` or run:
@@ -56,9 +56,9 @@ python main.py
 ### Build Standalone `.exe`
 Run **`build_exe.bat`** (requires `pyinstaller`):
 ```powershell
-pyinstaller --clean --noconfirm WajjiTinyHandPRO.spec
+pyinstaller --clean --noconfirm TinyHandWindows.spec
 ```
-Output executable: `dist\WajjiTinyHandPRO.exe`.
+Output executable: `dist\TinyHandWindows.exe`.
 
 ---
 
@@ -80,7 +80,7 @@ tinyhand-windows/
 ├── settings_window.py        # Custom dark Settings UI & Live Interactive Preview Canvas
 ├── input_hook.py             # Rebindable global keyboard hotkey listener (zero mouse hooks)
 ├── main.py                   # Application coordinator & Windows system tray
-├── WajjiTinyHandPRO.spec     # PyInstaller single-file build specification
+├── TinyHandWindows.spec      # PyInstaller single-file build specification
 ├── build_exe.bat             # One-click standalone .exe builder
 ├── run.bat                   # Development Windows launcher
 ├── THIRD_PARTY_LICENSES.txt  # MIT license attribution for bundled assets

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Settings Window for Wajji TinyHand PRO.
+Settings Window for TinyHand Windows.
 Clean, restrained dark-graphite utility interface inspired by native studio tools:
   - Minimal frameless window with crisp titlebar and single-line sidebar navigation
   - Elevated graphite surface groups (#1B1D23) with hairline dividers
@@ -1256,7 +1256,7 @@ def _button(text: str, primary: bool = False, danger: bool = False) -> QPushButt
 # Main Window: SettingsWindow
 # ===========================================================================
 class SettingsWindow(QWidget):
-    """Clean dark-graphite Settings Window for Wajji TinyHand PRO."""
+    """Clean dark-graphite Settings Window for TinyHand Windows."""
 
     WIN_W, WIN_H = 1000, 640
     SIDEBAR_W = 192
@@ -1392,7 +1392,7 @@ class SettingsWindow(QWidget):
         badge.setStyleSheet(f"background: {C_ACCENT}; border-radius: 6px;")
         hl.addWidget(badge, 0, Qt.AlignmentFlag.AlignVCenter)
 
-        hl.addWidget(_label("Wajji TinyHand PRO", 13, C_TEXT, bold=True), 0, Qt.AlignmentFlag.AlignVCenter)
+        hl.addWidget(_label("TinyHand Windows", 13, C_TEXT, bold=True), 0, Qt.AlignmentFlag.AlignVCenter)
         hl.addStretch()
 
         btn_min = QPushButton()
@@ -1992,7 +1992,7 @@ class SettingsWindow(QWidget):
         hero_body.addWidget(icon_badge, 0, Qt.AlignmentFlag.AlignHCenter)
         hero_body.addSpacing(4)
 
-        title = _label("Wajji TinyHand PRO", 22, C_TEXT, bold=True)
+        title = _label("TinyHand Windows", 22, C_TEXT, bold=True)
         title.setAlignment(Qt.AlignmentFlag.AlignCenter)
         hero_body.addWidget(title)
 

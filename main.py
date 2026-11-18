@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 """
-Wajji TinyHand PRO - Main Entry Point.
+TinyHand Windows - Main Entry Point.
 Coordinates the click-through overlay, frosted-glass HUD capsule,
-Obsidian Studio settings window, sound engine, keyboard hotkeys, and Windows system tray.
+dark settings window, sound engine, keyboard hotkeys, and Windows system tray.
 """
 
 import os
@@ -123,7 +123,7 @@ def _sync_hud_from_config(config: Config, overlay: OverlayWindow, hud: TinyHandH
 
 def main():
     app = QApplication(sys.argv)
-    app.setApplicationName("Wajji TinyHand PRO")
+    app.setApplicationName("TinyHand Windows")
     app.setWindowIcon(make_tray_icon())
     app.setQuitOnLastWindowClosed(False)
 
@@ -209,7 +209,7 @@ def main():
 
     # 6. Windows System Tray Integration
     tray = QSystemTrayIcon(make_tray_icon(), app)
-    tray.setToolTip("Wajji TinyHand PRO")
+    tray.setToolTip("TinyHand Windows")
 
     tray_menu = QMenu()
     tray_menu.setStyleSheet("""
@@ -262,7 +262,7 @@ def main():
 
     tray_menu.addSeparator()
 
-    act_exit = QAction(make_svg_icon("close", "#F87171", 14), "Exit Wajji TinyHand PRO", app)
+    act_exit = QAction(make_svg_icon("close", "#F87171", 14), "Exit TinyHand Windows", app)
     act_exit.triggered.connect(app.quit)
     tray_menu.addAction(act_exit)
 

@@ -1,6 +1,6 @@
 # -*- mode: python ; coding: utf-8 -*-
 """
-PyInstaller build spec for standalone WajjiTinyHandPRO.exe (Windows).
+PyInstaller build spec for standalone TinyHandWindows.exe.
 Builds a single-file windowed executable with all 36 hand assets, sounds,
 MIT third-party notices, and embedded Win32/PyQt6 plugins.
 """
@@ -62,7 +62,7 @@ exe = EXE(
     a.binaries,
     a.datas,
     [],
-    name="WajjiTinyHandPRO",
+    name="TinyHandWindows",
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,
