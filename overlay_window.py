@@ -203,9 +203,7 @@ class OverlayWindow(QWidget):
         desired = (
             style
             | WS_EX_TRANSPARENT
-            | WS_EX_LAYERED
             | WS_EX_TOOLWINDOW
-            | WS_EX_TOPMOST
             | WS_EX_NOACTIVATE
         )
         if style != desired:

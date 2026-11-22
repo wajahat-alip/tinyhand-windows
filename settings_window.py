@@ -139,24 +139,25 @@ class UpdateCheckerThread(QThread):
 
 
 # ---------------------------------------------------------------------------
-# Palette — Dark Charcoal & Crisp Light Gray (Taste-Skill / Linear Spec)
+# Palette — Distinct Dark Charcoal & Crisp Light Gray (Taste-Skill Standards)
 # ---------------------------------------------------------------------------
-C_WIN_BG = "#16171B"       # Outer window surface: deep warm dark charcoal
-C_SIDEBAR = "#121316"      # Navigation rail: matte dark charcoal
-C_CONTENT = "#16181D"      # Main canvas backdrop: sleek dark charcoal
-C_SURFACE = "#20232B"      # Translucent card surface
-C_SURFACE_HOVER = "#282C37"# Elevated charcoal hover state
-C_CONTROL_BG = "#1A1C22"   # Recessed well / segmented backing
-C_BORDER = "rgba(226, 232, 240, 0.10)"       # Subtle light gray hairline border
-C_BORDER_LIGHT = "rgba(226, 232, 240, 0.18)" # Elevated light gray border
-C_ACCENT = "#3B82F6"       # Restrained Electric Cobalt accent
-C_ACCENT_LIGHT = "#60A5FA" # Light Cobalt
-C_TEXT = "#F8FAFC"         # Crisp Luminous Light Gray (Headings & Primary)
-C_TEXT_SEC = "#CBD5E1"     # Sleek Light Gray (Secondary & Labels)
-C_TEXT_MUTED = "#94A3B8"   # Muted Light Gray (Hints, captions, subtitles)
-C_TRACK_OFF = "#2D313B"    # Dark charcoal track for switches/sliders
-C_SUCCESS = "#34D399"      # Emerald Green for update checks & success states
-C_DANGER = "#F87171"       # Muted Red for danger actions
+C_WIN_BG = "#1F232D"        # Deep mineral charcoal window base
+C_SIDEBAR = "#181A22"       # Matte dark charcoal rail
+C_CONTENT = "transparent"   # Translucent acrylic backdrop
+C_SURFACE = "#252B37"       # Translucent frosted charcoal card
+C_SURFACE_HOVER = "#2E3545" # Elevated card hover
+C_CONTROL_BG = "#222734"    # Recessed well / segmented backing
+C_BORDER = "#3E4756"        # Crisp Light Gray card border
+C_BORDER_LIGHT = "#64748B"  # Clear Light Gray highlight
+C_BORDER_ACTIVE = "#94A3B8" # Bright Light Gray focus outline
+C_ACCENT = "#3B82F6"        # Electric Cobalt accent
+C_ACCENT_LIGHT = "#60A5FA"  # Light Cobalt
+C_TEXT = "#FFFFFF"          # Brightest Light Gray / Pure White
+C_TEXT_SEC = "#E2E8F0"      # Crisp Luminous Light Gray
+C_TEXT_MUTED = "#94A3B8"    # Elegant Slate Gray
+C_TRACK_OFF = "#333A48"     # Charcoal toggle track
+C_SUCCESS = "#34D399"       # Emerald Green for update checks & success states
+C_DANGER = "#F87171"        # Muted Red for danger actions
 
 SIZE_LABELS = ["XS", "S", "M", "L", "XL"]
 SIZE_SCALES = [0.62, 0.80, 1.00, 1.22, 1.44]
@@ -278,9 +279,8 @@ def _scroll_qss() -> str:
     return (
         "QScrollArea { background: transparent; border: none; }"
         "QScrollBar:vertical { background: transparent; width: 6px; margin: 4px 2px 4px 0; }"
-        "QScrollBar::handle:vertical { background: rgba(226, 232, 240, 0.16); "
-        "border-radius: 3px; min-height: 28px; }"
-        "QScrollBar::handle:vertical:hover { background: rgba(226, 232, 240, 0.32); }"
+        "QScrollBar::handle:vertical { background: #475569; border-radius: 3px; min-height: 28px; }"
+        "QScrollBar::handle:vertical:hover { background: #64748B; }"
         "QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical { height: 0; }"
         "QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical { background: transparent; }"
     )
@@ -332,7 +332,7 @@ def _add_hsep(layout: QVBoxLayout):
     sep = QFrame()
     sep.setFrameShape(QFrame.Shape.HLine)
     sep.setFixedHeight(1)
-    sep.setStyleSheet("background: rgba(226, 232, 240, 0.08); border: none; margin: 2px 0;")
+    sep.setStyleSheet("background: #333A48; border: none; margin: 3px 0;")
     layout.addWidget(sep)
 
 
@@ -386,15 +386,17 @@ class NavRailButton(QWidget):
         pill.addRoundedRect(rect, 8.0, 8.0)
 
         if self._checked:
-            p.fillPath(pill, QColor(255, 255, 255, 18))
-            p.setPen(QPen(QColor(226, 232, 240, 36), 1.0))
+            p.fillPath(pill, QColor(43, 50, 66, 210))
+            p.setPen(QPen(QColor(148, 163, 184, 180), 1.0))
             p.drawPath(pill)
             # Left accent indicator line
             bar_path = QPainterPath()
             bar_path.addRoundedRect(QRectF(12, 9, 3, self.height() - 18), 1.5, 1.5)
             p.fillPath(bar_path, QColor(C_ACCENT_LIGHT))
         elif self._hovered:
-            p.fillPath(pill, QColor(255, 255, 255, 10))
+            p.fillPath(pill, QColor(36, 42, 56, 150))
+            p.setPen(QPen(QColor(100, 116, 139, 130), 1.0))
+            p.drawPath(pill)
 
         icon = (
             self._icon_active
@@ -421,6 +423,7 @@ class SettingsGroup(QWidget):
     def __init__(self, body_layout, parent: Optional[QWidget] = None):
         super().__init__(parent)
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground, True)
+        self._hovered = False
 
         outer = QVBoxLayout(self)
         outer.setContentsMargins(0, 0, 0, 0)
@@ -430,16 +433,31 @@ class SettingsGroup(QWidget):
         body.setLayout(body_layout)
         outer.addWidget(body)
 
+    def enterEvent(self, event):
+        self._hovered = True
+        self.update()
+
+    def leaveEvent(self, event):
+        self._hovered = False
+        self.update()
+
     def paintEvent(self, event):
         p = QPainter(self)
         p.setRenderHint(QPainter.RenderHint.Antialiasing, True)
         rect = QRectF(0.5, 0.5, self.width() - 1.0, self.height() - 1.0)
         path = QPainterPath()
-        path.addRoundedRect(rect, 11.0, 11.0)
-        # Translucent dark charcoal glass card
-        p.fillPath(path, QColor(28, 31, 39, 125))
-        # Delicate light-gray hairline rim
-        p.setPen(QPen(QColor(226, 232, 240, 24), 1.0))
+        path.addRoundedRect(rect, 10.0, 10.0)
+
+        # Translucent dark charcoal glass card fill (60-70% alpha)
+        card_fill = QColor(36, 42, 56, 165) if not self._hovered else QColor(44, 52, 68, 190)
+        p.fillPath(path, card_fill)
+
+        # Crisp, distinct Light Gray border
+        border_pen = QPen(
+            QColor(160, 178, 204, 110) if not self._hovered else QColor(226, 232, 240, 180),
+            1.2
+        )
+        p.setPen(border_pen)
         p.drawPath(path)
         p.end()
 
@@ -626,11 +644,11 @@ class SegmentedControl(QWidget):
             btn.setChecked(val == self._current)
             btn.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
             btn.setStyleSheet(
-                "QPushButton { background: transparent; color: #9CA3AF; border: none; "
+                "QPushButton { background: transparent; color: #CBD5E1; border: none; "
                 "border-radius: 6px; padding: 3px 11px; font-size: 11px; font-weight: 500; "
                 "font-family: 'Segoe UI', sans-serif; }"
-                "QPushButton:hover { color: #F3F4F6; }"
-                "QPushButton:checked { background: #282B35; color: #FFFFFF; font-weight: 600; }"
+                "QPushButton:hover { color: #FFFFFF; background: #2E3547; }"
+                "QPushButton:checked { background: #3B82F6; color: #FFFFFF; font-weight: 600; }"
             )
             btn.clicked.connect(lambda _c, v=val: self._select(v))
             self._buttons.append((btn, val))
@@ -652,7 +670,7 @@ class SegmentedControl(QWidget):
         path = QPainterPath()
         path.addRoundedRect(rect, 8.0, 8.0)
         p.fillPath(path, QColor(C_CONTROL_BG))
-        p.setPen(QPen(QColor(255, 255, 255, 14), 1.0))
+        p.setPen(QPen(QColor(100, 116, 139, 120), 1.0))
         p.drawPath(path)
         p.end()
 
@@ -807,17 +825,15 @@ class PointerThumb(QWidget):
         path.addRoundedRect(rect, 10.0, 10.0)
 
         if self._selected:
-            p.fillPath(path, QColor(59, 130, 246, 36))
-            p.setPen(QPen(QColor(C_ACCENT), 1.6))
-            p.drawPath(path)
+            p.fillPath(path, QColor(59, 130, 246, 50))
+            p.setPen(QPen(QColor("#60A5FA"), 1.8))
         elif self._hovered:
-            p.fillPath(path, QColor(C_SURFACE_HOVER))
-            p.setPen(QPen(QColor(255, 255, 255, 34), 1.0))
-            p.drawPath(path)
+            p.fillPath(path, QColor(46, 54, 70, 200))
+            p.setPen(QPen(QColor(160, 178, 204, 160), 1.2))
         else:
-            p.fillPath(path, QColor(C_SURFACE))
-            p.setPen(QPen(QColor(255, 255, 255, 14), 1.0))
-            p.drawPath(path)
+            p.fillPath(path, QColor(36, 42, 56, 170))
+            p.setPen(QPen(QColor(100, 116, 139, 110), 1.0))
+        p.drawPath(path)
         p.end()
 
 
@@ -887,20 +903,20 @@ class SoundTile(QWidget):
         path.addRoundedRect(rect, 9.0, 9.0)
 
         if self._selected:
-            p.fillPath(path, QColor(59, 130, 246, 36))
-            p.setPen(QPen(QColor(C_ACCENT), 1.5))
+            p.fillPath(path, QColor(59, 130, 246, 50))
+            p.setPen(QPen(QColor("#60A5FA"), 1.8))
         elif self._hovered:
-            p.fillPath(path, QColor(C_SURFACE_HOVER))
-            p.setPen(QPen(QColor(255, 255, 255, 30), 1.0))
+            p.fillPath(path, QColor(46, 54, 70, 200))
+            p.setPen(QPen(QColor(160, 178, 204, 160), 1.2))
         else:
-            p.fillPath(path, QColor(C_CONTROL_BG))
-            p.setPen(QPen(QColor(255, 255, 255, 14), 1.0))
+            p.fillPath(path, QColor(36, 42, 56, 170))
+            p.setPen(QPen(QColor(100, 116, 139, 110), 1.0))
         p.drawPath(path)
         p.end()
 
 
 class HotkeyButton(QPushButton):
-    """Click-to-record hotkey pill button."""
+    """Click-to-record hotkey pill button with crisp Light Gray border."""
 
     hotkeyChanged = pyqtSignal(str)
 
@@ -918,18 +934,18 @@ class HotkeyButton(QPushButton):
     @staticmethod
     def _base_qss() -> str:
         return (
-            f"QPushButton {{ background: {C_CONTROL_BG}; color: {C_TEXT}; "
-            "  border: 1px solid rgba(255, 255, 255, 0.10); border-radius: 6px; "
-            "  font-size: 11px; font-weight: 500; padding: 3px 10px; font-family: 'Segoe UI'; }}"
-            "QPushButton:hover { border-color: rgba(255, 255, 255, 0.25); background: #232630; }"
+            "QPushButton { background: #262B38; color: #F8FAFC; "
+            "  border: 1px solid #475569; border-radius: 6px; "
+            "  font-size: 11px; font-weight: 600; padding: 3px 10px; font-family: 'Segoe UI'; }"
+            "QPushButton:hover { border-color: #94A3B8; background: #323A4D; color: #FFFFFF; }"
         )
 
     @staticmethod
     def _record_qss() -> str:
         return (
-            f"QPushButton {{ background: rgba(59, 130, 246, 0.20); color: #FFFFFF; "
-            f"  border: 1.5px solid {C_ACCENT}; border-radius: 6px; "
-            "  font-size: 11px; font-weight: 600; padding: 3px 10px; font-family: 'Segoe UI'; }}"
+            "QPushButton { background: #1E3A8A; color: #FFFFFF; "
+            "  border: 1.5px solid #60A5FA; border-radius: 6px; "
+            "  font-size: 11px; font-weight: 600; padding: 3px 10px; font-family: 'Segoe UI'; }"
         )
 
     def _update_text(self):
@@ -1312,31 +1328,31 @@ def _button(text: str, primary: bool = False, danger: bool = False, outline: boo
     btn.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
     if danger:
         btn.setStyleSheet(
-            "QPushButton { background: rgba(248, 113, 113, 0.12); color: #FCA5A5; "
-            "  border: 1px solid rgba(248, 113, 113, 0.28); border-radius: 7px; "
+            "QPushButton { background: #3B1E22; color: #FCA5A5; "
+            "  border: 1px solid #7F1D1D; border-radius: 7px; "
             "  padding: 7px 14px; font-weight: 600; font-size: 12px; font-family: 'Segoe UI'; }"
-            "QPushButton:hover { background: rgba(248, 113, 113, 0.22); color: #FFFFFF; }"
+            "QPushButton:hover { background: #4C1D24; color: #FFFFFF; border-color: #EF4444; }"
         )
     elif primary:
         btn.setStyleSheet(
-            f"QPushButton {{ background: {C_ACCENT}; color: #FFFFFF; border: none; "
+            f"QPushButton {{ background: {C_ACCENT}; color: #FFFFFF; border: 1px solid #60A5FA; "
             "  border-radius: 7px; padding: 7px 14px; font-weight: 600; "
             "  font-size: 12px; font-family: 'Segoe UI'; }}"
-            f"QPushButton:hover {{ background: #2563EB; }}"
+            "QPushButton:hover { background: #2563EB; border-color: #93C5FD; }"
         )
     elif outline:
         btn.setStyleSheet(
-            "QPushButton { background: transparent; color: #CBD5E1; "
-            "  border: 1px solid rgba(226, 232, 240, 0.22); border-radius: 7px; "
+            "QPushButton { background: transparent; color: #E2E8F0; "
+            "  border: 1px solid #4B5568; border-radius: 7px; "
             "  padding: 7px 14px; font-weight: 500; font-size: 12px; font-family: 'Segoe UI'; }"
-            "QPushButton:hover { background: rgba(255, 255, 255, 0.06); color: #FFFFFF; border-color: rgba(226, 232, 240, 0.38); }"
+            "QPushButton:hover { background: #252B38; color: #FFFFFF; border-color: #94A3B8; }"
         )
     else:
         btn.setStyleSheet(
-            "QPushButton { background: #242732; color: #E5E7EB; "
-            "  border: 1px solid rgba(226, 232, 240, 0.12); border-radius: 7px; "
+            "QPushButton { background: #252B38; color: #F1F5F9; "
+            "  border: 1px solid #4B5568; border-radius: 7px; "
             "  padding: 7px 14px; font-weight: 500; font-size: 12px; font-family: 'Segoe UI'; }"
-            "QPushButton:hover { background: #2D313E; color: #FFFFFF; border-color: rgba(226, 232, 240, 0.25); }"
+            "QPushButton:hover { background: #323A4D; color: #FFFFFF; border-color: #64748B; }"
         )
     return btn
 
@@ -1394,6 +1410,25 @@ class SettingsWindow(QWidget):
         )
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground, True)
 
+        try:
+            import ctypes
+            from ctypes import wintypes
+            class DWM_BLURBEHIND(ctypes.Structure):
+                _fields_ = [
+                    ('dwFlags', wintypes.DWORD),
+                    ('fEnable', wintypes.BOOL),
+                    ('hRgnBlur', wintypes.HRGN),
+                    ('fTransitionOnMaximized', wintypes.BOOL)
+                ]
+            bb = DWM_BLURBEHIND()
+            bb.dwFlags = 0x00000001
+            bb.fEnable = True
+            bb.hRgnBlur = None
+            bb.fTransitionOnMaximized = False
+            ctypes.windll.dwmapi.DwmEnableBlurBehindWindow(int(self.winId()), ctypes.byref(bb))
+        except Exception:
+            pass
+
         shadow = QGraphicsDropShadowEffect(self)
         shadow.setBlurRadius(44)
         shadow.setOffset(0, 10)
@@ -1411,14 +1446,15 @@ class SettingsWindow(QWidget):
         path = QPainterPath()
         path.addRoundedRect(outer, 13.0, 13.0)
 
-        # Subtle dark charcoal surface gradient
+        # Translucent Dark Charcoal Acrylic Gradient
+        # 215-225 alpha allows the background behind the window to visibly show through!
         grad = QLinearGradient(0, 0, self.WIN_W, self.WIN_H)
-        grad.setColorAt(0.0, QColor("#1B1D23"))
-        grad.setColorAt(1.0, QColor("#141519"))
+        grad.setColorAt(0.0, QColor(32, 37, 48, 215))
+        grad.setColorAt(1.0, QColor(22, 25, 33, 225))
         p.fillPath(path, QBrush(grad))
 
         # Crisp Light Gray outer window hairline
-        p.setPen(QPen(QColor(226, 232, 240, 28), 1.0))
+        p.setPen(QPen(QColor(160, 178, 204, 100), 1.2))
         p.drawPath(path)
         p.end()
 
@@ -1443,7 +1479,7 @@ class SettingsWindow(QWidget):
 
         hdiv = QWidget()
         hdiv.setFixedHeight(1)
-        hdiv.setStyleSheet("background: rgba(226, 232, 240, 0.08);")
+        hdiv.setStyleSheet("background: #333A48;")
         shell.addWidget(hdiv)
 
         body = QWidget()
@@ -1456,7 +1492,7 @@ class SettingsWindow(QWidget):
 
         vdiv1 = QWidget()
         vdiv1.setFixedWidth(1)
-        vdiv1.setStyleSheet("background: rgba(226, 232, 240, 0.08);")
+        vdiv1.setStyleSheet("background: #333A48;")
         body_hl.addWidget(vdiv1)
 
         self._stack = self._build_pages()
@@ -1464,7 +1500,7 @@ class SettingsWindow(QWidget):
 
         self._preview_divider = QWidget()
         self._preview_divider.setFixedWidth(1)
-        self._preview_divider.setStyleSheet("background: rgba(226, 232, 240, 0.08);")
+        self._preview_divider.setStyleSheet("background: #333A48;")
         body_hl.addWidget(self._preview_divider)
 
         self._preview_dock = self._build_preview_dock()
@@ -1501,7 +1537,7 @@ class SettingsWindow(QWidget):
         btn_min.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
         btn_min.setStyleSheet(
             "QPushButton { background: transparent; border: none; border-radius: 6px; }"
-            "QPushButton:hover { background: rgba(255, 255, 255, 0.08); }"
+            "QPushButton:hover { background: #2E3547; }"
         )
         btn_min.clicked.connect(self.showMinimized)
         hl.addWidget(btn_min, 0, Qt.AlignmentFlag.AlignVCenter)
@@ -1514,7 +1550,7 @@ class SettingsWindow(QWidget):
         btn_close.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
         btn_close.setStyleSheet(
             "QPushButton { background: transparent; border: none; border-radius: 6px; }"
-            "QPushButton:hover { background: rgba(239, 68, 68, 0.75); }"
+            "QPushButton:hover { background: #DC2626; }"
         )
         btn_close.clicked.connect(self.hide)
         hl.addWidget(btn_close, 0, Qt.AlignmentFlag.AlignVCenter)
@@ -1606,7 +1642,7 @@ class SettingsWindow(QWidget):
         summary_wrap.setObjectName("PreviewSummaryPill")
         summary_wrap.setStyleSheet(
             f"#PreviewSummaryPill {{ background: {C_SURFACE}; "
-            "border: 1px solid rgba(226, 232, 240, 0.10); border-radius: 9px; }"
+            "border: 1px solid #475569; border-radius: 9px; }"
         )
         sum_vl = QVBoxLayout(summary_wrap)
         sum_vl.setContentsMargins(12, 9, 12, 9)
@@ -1637,11 +1673,11 @@ class SettingsWindow(QWidget):
         btn.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
         btn.setStyleSheet(
             f"QPushButton {{ background: {C_SURFACE}; color: #D1D5DB; "
-            "border: 1px solid rgba(226, 232, 240, 0.12); border-radius: 7px; "
+            "border: 1px solid #475569; border-radius: 7px; "
             "padding: 3px 8px; font-size: 11px; font-weight: 500; font-family: 'Segoe UI'; }"
-            "QPushButton:hover { background: #282C37; color: #FFFFFF; border-color: rgba(226, 232, 240, 0.28); }"
-            f"QPushButton:checked {{ background: rgba(59,130,246,0.22); color: {C_ACCENT_LIGHT}; "
-            f"border-color: rgba(59,130,246,0.55); font-weight: 600; }}"
+            "QPushButton:hover { background: #323A4D; color: #FFFFFF; border-color: #64748B; }"
+            f"QPushButton:checked {{ background: #1E3A8A; color: #93C5FD; "
+            "border-color: #3B82F6; font-weight: 600; }}"
         )
         return btn
 
@@ -1762,9 +1798,9 @@ class SettingsWindow(QWidget):
         self._search_input.setFixedHeight(32)
         self._search_input.setStyleSheet(
             f"QLineEdit {{ background: {C_CONTROL_BG}; color: {C_TEXT}; "
-            "border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; "
+            "border: 1px solid #475569; border-radius: 8px; "
             "padding: 3px 10px; font-size: 12px; font-family: 'Segoe UI'; }}"
-            f"QLineEdit:focus {{ border-color: {C_ACCENT}; }}"
+            f"QLineEdit:focus {{ border: 1px solid {C_ACCENT_LIGHT}; background: #282E3E; }}"
         )
         self._search_input.textChanged.connect(self._on_search_changed)
         filter_bar.addWidget(self._search_input, 1)
@@ -2131,7 +2167,7 @@ class SettingsWindow(QWidget):
         # Dynamic update result card (revealed on check)
         self._update_result_frame = QFrame()
         self._update_result_frame.setStyleSheet(
-            f"background: rgba(30, 33, 42, 0.75); border: 1px solid {C_BORDER}; border-radius: 8px;"
+            "background: #1F2432; border: 1px solid #475569; border-radius: 8px;"
         )
         self._update_result_frame.setVisible(False)
         up_res_vl = QVBoxLayout(self._update_result_frame)
@@ -2329,7 +2365,7 @@ class SettingsWindow(QWidget):
             old_txt = self._btn_copy_diag.text()
             self._btn_copy_diag.setText("Copied to Clipboard!")
             self._btn_copy_diag.setStyleSheet(
-                f"QPushButton {{ background: rgba(52, 211, 153, 0.20); color: {C_SUCCESS}; "
+                f"QPushButton {{ background: #064E3B; color: #6EE7B7; "
                 f"border: 1px solid {C_SUCCESS}; border-radius: 7px; padding: 7px 14px; font-weight: 600; font-size: 12px; }}"
             )
             QTimer.singleShot(2500, lambda: self._restore_copy_diag_btn(old_txt))
@@ -2337,10 +2373,10 @@ class SettingsWindow(QWidget):
     def _restore_copy_diag_btn(self, old_txt: str):
         self._btn_copy_diag.setText(old_txt)
         self._btn_copy_diag.setStyleSheet(
-            "QPushButton { background: #242732; color: #E5E7EB; "
-            "border: 1px solid rgba(226, 232, 240, 0.12); border-radius: 7px; "
+            "QPushButton { background: #252B38; color: #F1F5F9; "
+            "border: 1px solid #4B5568; border-radius: 7px; "
             "padding: 7px 14px; font-weight: 500; font-size: 12px; font-family: 'Segoe UI'; }"
-            "QPushButton:hover { background: #2D313E; color: #FFFFFF; border-color: rgba(226, 232, 240, 0.25); }"
+            "QPushButton:hover { background: #323A4D; color: #FFFFFF; border-color: #64748B; }"
         )
 
     def _repair_config(self):
@@ -2730,7 +2766,7 @@ class SettingsWindow(QWidget):
         row.setObjectName("CustomUploadRow")
         row.setStyleSheet(
             f"#CustomUploadRow {{ background: {C_CONTROL_BG}; "
-            "border: 1px solid rgba(255,255,255,0.07); border-radius: 7px; }"
+            "border: 1px solid #333A48; border-radius: 7px; }"
         )
         hl = QHBoxLayout(row)
         hl.setContentsMargins(10, 6, 8, 6)
@@ -2741,8 +2777,8 @@ class SettingsWindow(QWidget):
         use_btn = QPushButton("Use")
         use_btn.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
         use_btn.setStyleSheet(
-            f"QPushButton {{ background: rgba(59,130,246,0.18); color: {C_ACCENT_LIGHT}; "
-            "border: none; border-radius: 5px; padding: 3px 10px; font-size: 11px; font-weight: 600; }}"
+            f"QPushButton {{ background: #1E3A8A; color: #93C5FD; "
+            "border: 1px solid #3B82F6; border-radius: 5px; padding: 3px 10px; font-size: 11px; font-weight: 600; }}"
             f"QPushButton:hover {{ background: {C_ACCENT}; color: #FFFFFF; }}"
         )
         use_btn.clicked.connect(on_use)
@@ -2778,12 +2814,12 @@ class SettingsWindow(QWidget):
     def _combo_qss() -> str:
         return (
             f"QComboBox {{ background: {C_CONTROL_BG}; color: {C_TEXT}; "
-            "border: 1px solid rgba(226, 232, 240, 0.12); border-radius: 7px; "
+            "border: 1px solid #475569; border-radius: 7px; "
             "padding: 4px 10px; font-size: 12px; font-family: 'Segoe UI'; }"
-            "QComboBox:hover { border-color: rgba(226, 232, 240, 0.30); }"
+            "QComboBox:hover { border-color: #64748B; }"
             "QComboBox::drop-down { border: none; width: 20px; }"
             f"QComboBox QAbstractItemView {{ background: {C_CONTROL_BG}; color: {C_TEXT}; "
-            "border: 1px solid rgba(226, 232, 240, 0.16); "
+            "border: 1px solid #475569; "
             f"selection-background-color: {C_ACCENT}; selection-color: #FFFFFF; }}"
         )
 
