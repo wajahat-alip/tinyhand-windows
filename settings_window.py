@@ -24,7 +24,9 @@ from PyQt6.QtCore import (
     QRectF,
     QSize,
     Qt,
+    QThread,
     QTimer,
+    QUrl,
     pyqtProperty,
     pyqtSignal,
 )
@@ -33,9 +35,11 @@ from PyQt6.QtGui import (
     QColor,
     QConicalGradient,
     QCursor,
+    QDesktopServices,
     QFont,
     QGuiApplication,
     QKeyEvent,
+    QKeySequence,
     QLinearGradient,
     QPainter,
     QPainterPath,
@@ -60,27 +64,99 @@ from PyQt6.QtWidgets import (
     QWidget,
 )
 
+from config import APP_NAME, APP_VERSION
 from hand_engine import HAND_CATALOG, CustomFunnyPointers, HandAsset
 from icons import make_svg_icon
 from ink_engine import InkEngine
 from overlay_window import ClickRipple, ComicBubble
 
 # ---------------------------------------------------------------------------
-# Palette — Clean Warm-Neutral Graphite
+# Background Worker: Check for GitHub Releases asynchronously
 # ---------------------------------------------------------------------------
-C_WIN_BG = "#131418"       # outer window surface
-C_SIDEBAR = "#101115"      # navigation rail background
-C_CONTENT = "#16171C"      # main canvas background
-C_SURFACE = "#1D1F26"      # grouped card surface
-C_SURFACE_HOVER = "#242730"
-C_CONTROL_BG = "#121318"   # recessed wells / segmented backings
-C_ACCENT = "#3B82F6"       # single restrained Cobalt accent
-C_ACCENT_LIGHT = "#60A5FA"
-C_TEXT = "#F3F4F6"
-C_TEXT_SEC = "#9CA3AF"
-C_TEXT_MUTED = "#6B7280"
-C_TRACK_OFF = "#2C2F3A"
-C_DANGER = "#F87171"
+class UpdateCheckerThread(QThread):
+    """Background worker to query GitHub Releases without blocking the UI thread."""
+
+    check_finished = pyqtSignal(dict)
+
+    def __init__(self, current_version: str = "1.0.0", repo: str = "wajahat-alip/tinyhand-windows", parent=None):
+        super().__init__(parent)
+        self.current_version = str(current_version).lstrip("v")
+        self.repo = repo
+
+    def run(self):
+        import json
+        import urllib.request
+        api_url = f"https://api.github.com/repos/{self.repo}/releases/latest"
+        req = urllib.request.Request(
+            api_url,
+            headers={
+                "User-Agent": "TinyHand-Windows-Updater",
+                "Accept": "application/vnd.github.v3+json",
+            },
+        )
+        try:
+            with urllib.request.urlopen(req, timeout=8) as resp:
+                data = json.loads(resp.read().decode("utf-8"))
+                tag_name = data.get("tag_name", "").lstrip("v")
+                html_url = data.get("html_url", f"https://github.com/{self.repo}/releases")
+                body = data.get("body", "")
+
+                is_newer = False
+                if tag_name:
+                    curr_parts = [int(p) for p in self.current_version.split(".") if p.isdigit()]
+                    tag_parts = [int(p) for p in tag_name.split(".") if p.isdigit()]
+                    while len(curr_parts) < 3:
+                        curr_parts.append(0)
+                    while len(tag_parts) < 3:
+                        tag_parts.append(0)
+                    is_newer = tag_parts > curr_parts
+
+                download_url = html_url
+                for asset in data.get("assets", []):
+                    if asset.get("name", "").endswith(".exe"):
+                        download_url = asset.get("browser_download_url", html_url)
+                        break
+
+                self.check_finished.emit({
+                    "success": True,
+                    "latest_version": tag_name or "1.0.0",
+                    "is_new": is_newer,
+                    "download_url": download_url,
+                    "release_url": html_url,
+                    "notes": (body[:260] + "...") if len(body) > 260 else body,
+                    "error": "",
+                })
+        except Exception as e:
+            self.check_finished.emit({
+                "success": False,
+                "latest_version": self.current_version,
+                "is_new": False,
+                "download_url": f"https://github.com/{self.repo}/releases",
+                "release_url": f"https://github.com/{self.repo}/releases",
+                "notes": "",
+                "error": str(e),
+            })
+
+
+# ---------------------------------------------------------------------------
+# Palette — Dark Charcoal & Crisp Light Gray (Taste-Skill / Linear Spec)
+# ---------------------------------------------------------------------------
+C_WIN_BG = "#16171B"       # Outer window surface: deep warm dark charcoal
+C_SIDEBAR = "#121316"      # Navigation rail: matte dark charcoal
+C_CONTENT = "#16181D"      # Main canvas backdrop: sleek dark charcoal
+C_SURFACE = "#20232B"      # Translucent card surface
+C_SURFACE_HOVER = "#282C37"# Elevated charcoal hover state
+C_CONTROL_BG = "#1A1C22"   # Recessed well / segmented backing
+C_BORDER = "rgba(226, 232, 240, 0.10)"       # Subtle light gray hairline border
+C_BORDER_LIGHT = "rgba(226, 232, 240, 0.18)" # Elevated light gray border
+C_ACCENT = "#3B82F6"       # Restrained Electric Cobalt accent
+C_ACCENT_LIGHT = "#60A5FA" # Light Cobalt
+C_TEXT = "#F8FAFC"         # Crisp Luminous Light Gray (Headings & Primary)
+C_TEXT_SEC = "#CBD5E1"     # Sleek Light Gray (Secondary & Labels)
+C_TEXT_MUTED = "#94A3B8"   # Muted Light Gray (Hints, captions, subtitles)
+C_TRACK_OFF = "#2D313B"    # Dark charcoal track for switches/sliders
+C_SUCCESS = "#34D399"      # Emerald Green for update checks & success states
+C_DANGER = "#F87171"       # Muted Red for danger actions
 
 SIZE_LABELS = ["XS", "S", "M", "L", "XL"]
 SIZE_SCALES = [0.62, 0.80, 1.00, 1.22, 1.44]
@@ -200,11 +276,11 @@ def build_hand_thumb_pixmap(
 # ---------------------------------------------------------------------------
 def _scroll_qss() -> str:
     return (
-        f"QScrollArea {{ background: {C_CONTENT}; border: none; }}"
+        "QScrollArea { background: transparent; border: none; }"
         "QScrollBar:vertical { background: transparent; width: 6px; margin: 4px 2px 4px 0; }"
-        "QScrollBar::handle:vertical { background: rgba(255, 255, 255, 0.14); "
+        "QScrollBar::handle:vertical { background: rgba(226, 232, 240, 0.16); "
         "border-radius: 3px; min-height: 28px; }"
-        "QScrollBar::handle:vertical:hover { background: rgba(255, 255, 255, 0.28); }"
+        "QScrollBar::handle:vertical:hover { background: rgba(226, 232, 240, 0.32); }"
         "QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical { height: 0; }"
         "QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical { background: transparent; }"
     )
@@ -217,7 +293,7 @@ def _page_scroll() -> Tuple[QScrollArea, QWidget, QVBoxLayout]:
     scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
     scroll.setStyleSheet(_scroll_qss())
     inner = QWidget()
-    inner.setStyleSheet(f"background: {C_CONTENT};")
+    inner.setStyleSheet("background: transparent;")
     vbox = QVBoxLayout(inner)
     vbox.setContentsMargins(24, 20, 22, 28)
     vbox.setSpacing(14)
@@ -256,7 +332,7 @@ def _add_hsep(layout: QVBoxLayout):
     sep = QFrame()
     sep.setFrameShape(QFrame.Shape.HLine)
     sep.setFixedHeight(1)
-    sep.setStyleSheet("background: rgba(255, 255, 255, 0.05); border: none; margin: 2px 0;")
+    sep.setStyleSheet("background: rgba(226, 232, 240, 0.08); border: none; margin: 2px 0;")
     layout.addWidget(sep)
 
 
@@ -310,25 +386,29 @@ class NavRailButton(QWidget):
         pill.addRoundedRect(rect, 8.0, 8.0)
 
         if self._checked:
-            p.fillPath(pill, QColor("#21242D"))
-            p.setPen(QPen(QColor(255, 255, 255, 14), 1.0))
+            p.fillPath(pill, QColor(255, 255, 255, 18))
+            p.setPen(QPen(QColor(226, 232, 240, 36), 1.0))
             p.drawPath(pill)
+            # Left accent indicator line
+            bar_path = QPainterPath()
+            bar_path.addRoundedRect(QRectF(12, 9, 3, self.height() - 18), 1.5, 1.5)
+            p.fillPath(bar_path, QColor(C_ACCENT_LIGHT))
         elif self._hovered:
-            p.fillPath(pill, QColor(255, 255, 255, 9))
+            p.fillPath(pill, QColor(255, 255, 255, 10))
 
         icon = (
             self._icon_active
             if self._checked
             else (self._icon_hover if self._hovered else self._icon_idle)
         )
-        icon.paint(p, QRect(21, int((self.height() - 15) * 0.5), 15, 15))
+        icon.paint(p, QRect(22, int((self.height() - 15) * 0.5), 15, 15))
 
         txt_col = QColor("#FFFFFF") if self._checked else (QColor(C_TEXT) if self._hovered else QColor(C_TEXT_SEC))
         weight = QFont.Weight.DemiBold if self._checked else QFont.Weight.Medium
         p.setFont(QFont("Segoe UI", 9, weight))
         p.setPen(txt_col)
         p.drawText(
-            QRectF(45, 0, self.width() - 56, self.height()),
+            QRectF(47, 0, self.width() - 58, self.height()),
             Qt.AlignmentFlag.AlignVCenter,
             self.label,
         )
@@ -336,7 +416,7 @@ class NavRailButton(QWidget):
 
 
 class SettingsGroup(QWidget):
-    """Elevated dark-graphite settings group card with clean hairline rim."""
+    """Refined Dark Charcoal & Light Gray translucent card with glassmorphic rim."""
 
     def __init__(self, body_layout, parent: Optional[QWidget] = None):
         super().__init__(parent)
@@ -346,7 +426,7 @@ class SettingsGroup(QWidget):
         outer.setContentsMargins(0, 0, 0, 0)
         body = QWidget()
         body.setStyleSheet("background: transparent;")
-        body_layout.setContentsMargins(16, 12, 16, 12)
+        body_layout.setContentsMargins(16, 14, 16, 14)
         body.setLayout(body_layout)
         outer.addWidget(body)
 
@@ -355,9 +435,11 @@ class SettingsGroup(QWidget):
         p.setRenderHint(QPainter.RenderHint.Antialiasing, True)
         rect = QRectF(0.5, 0.5, self.width() - 1.0, self.height() - 1.0)
         path = QPainterPath()
-        path.addRoundedRect(rect, 10.0, 10.0)
-        p.fillPath(path, QColor(C_SURFACE))
-        p.setPen(QPen(QColor(255, 255, 255, 16), 1.0))
+        path.addRoundedRect(rect, 11.0, 11.0)
+        # Translucent dark charcoal glass card
+        p.fillPath(path, QColor(28, 31, 39, 125))
+        # Delicate light-gray hairline rim
+        p.setPen(QPen(QColor(226, 232, 240, 24), 1.0))
         p.drawPath(path)
         p.end()
 
@@ -1225,7 +1307,7 @@ def _slider_row(
     return row, slider, val_lbl
 
 
-def _button(text: str, primary: bool = False, danger: bool = False) -> QPushButton:
+def _button(text: str, primary: bool = False, danger: bool = False, outline: bool = False) -> QPushButton:
     btn = QPushButton(text)
     btn.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
     if danger:
@@ -1242,12 +1324,19 @@ def _button(text: str, primary: bool = False, danger: bool = False) -> QPushButt
             "  font-size: 12px; font-family: 'Segoe UI'; }}"
             f"QPushButton:hover {{ background: #2563EB; }}"
         )
+    elif outline:
+        btn.setStyleSheet(
+            "QPushButton { background: transparent; color: #CBD5E1; "
+            "  border: 1px solid rgba(226, 232, 240, 0.22); border-radius: 7px; "
+            "  padding: 7px 14px; font-weight: 500; font-size: 12px; font-family: 'Segoe UI'; }"
+            "QPushButton:hover { background: rgba(255, 255, 255, 0.06); color: #FFFFFF; border-color: rgba(226, 232, 240, 0.38); }"
+        )
     else:
         btn.setStyleSheet(
-            "QPushButton { background: #252832; color: #E5E7EB; "
-            "  border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 7px; "
-            "  padding: 7px 14px; font-weight: 500; font-size: 12px; font-family: 'Segoe UI'; }}"
-            "QPushButton:hover { background: #2E323F; color: #FFFFFF; }"
+            "QPushButton { background: #242732; color: #E5E7EB; "
+            "  border: 1px solid rgba(226, 232, 240, 0.12); border-radius: 7px; "
+            "  padding: 7px 14px; font-weight: 500; font-size: 12px; font-family: 'Segoe UI'; }"
+            "QPushButton:hover { background: #2D313E; color: #FFFFFF; border-color: rgba(226, 232, 240, 0.25); }"
         )
     return btn
 
@@ -1294,6 +1383,8 @@ class SettingsWindow(QWidget):
         self._pointer_grid_layout: Optional[QGridLayout] = None
         self._pointer_category = "all"
         self._pointer_search = ""
+        self._last_update_info: Dict[str, object] = {}
+        self._update_worker: Optional[UpdateCheckerThread] = None
 
         self.setFixedSize(self.WIN_W, self.WIN_H)
         self.setWindowFlags(
@@ -1319,8 +1410,15 @@ class SettingsWindow(QWidget):
         outer = QRectF(1.0, 1.0, self.WIN_W - 2.0, self.WIN_H - 2.0)
         path = QPainterPath()
         path.addRoundedRect(outer, 13.0, 13.0)
-        p.fillPath(path, QColor(C_WIN_BG))
-        p.setPen(QPen(QColor(255, 255, 255, 24), 1.0))
+
+        # Subtle dark charcoal surface gradient
+        grad = QLinearGradient(0, 0, self.WIN_W, self.WIN_H)
+        grad.setColorAt(0.0, QColor("#1B1D23"))
+        grad.setColorAt(1.0, QColor("#141519"))
+        p.fillPath(path, QBrush(grad))
+
+        # Crisp Light Gray outer window hairline
+        p.setPen(QPen(QColor(226, 232, 240, 28), 1.0))
         p.drawPath(path)
         p.end()
 
@@ -1345,7 +1443,7 @@ class SettingsWindow(QWidget):
 
         hdiv = QWidget()
         hdiv.setFixedHeight(1)
-        hdiv.setStyleSheet("background: rgba(255, 255, 255, 0.06);")
+        hdiv.setStyleSheet("background: rgba(226, 232, 240, 0.08);")
         shell.addWidget(hdiv)
 
         body = QWidget()
@@ -1358,7 +1456,7 @@ class SettingsWindow(QWidget):
 
         vdiv1 = QWidget()
         vdiv1.setFixedWidth(1)
-        vdiv1.setStyleSheet("background: rgba(255, 255, 255, 0.06);")
+        vdiv1.setStyleSheet("background: rgba(226, 232, 240, 0.08);")
         body_hl.addWidget(vdiv1)
 
         self._stack = self._build_pages()
@@ -1366,7 +1464,7 @@ class SettingsWindow(QWidget):
 
         self._preview_divider = QWidget()
         self._preview_divider.setFixedWidth(1)
-        self._preview_divider.setStyleSheet("background: rgba(255, 255, 255, 0.06);")
+        self._preview_divider.setStyleSheet("background: rgba(226, 232, 240, 0.08);")
         body_hl.addWidget(self._preview_divider)
 
         self._preview_dock = self._build_preview_dock()
@@ -1397,7 +1495,7 @@ class SettingsWindow(QWidget):
 
         btn_min = QPushButton()
         btn_min.setFixedSize(30, 26)
-        btn_min.setIcon(make_svg_icon("minimize", "#9CA3AF", 12))
+        btn_min.setIcon(make_svg_icon("minimize", "#CBD5E1", 12))
         btn_min.setIconSize(QSize(12, 12))
         btn_min.setToolTip("Minimize")
         btn_min.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
@@ -1410,13 +1508,13 @@ class SettingsWindow(QWidget):
 
         btn_close = QPushButton()
         btn_close.setFixedSize(30, 26)
-        btn_close.setIcon(make_svg_icon("close", "#9CA3AF", 12))
+        btn_close.setIcon(make_svg_icon("close", "#CBD5E1", 12))
         btn_close.setIconSize(QSize(12, 12))
         btn_close.setToolTip("Close")
         btn_close.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
         btn_close.setStyleSheet(
             "QPushButton { background: transparent; border: none; border-radius: 6px; }"
-            "QPushButton:hover { background: rgba(239, 68, 68, 0.72); }"
+            "QPushButton:hover { background: rgba(239, 68, 68, 0.75); }"
         )
         btn_close.clicked.connect(self.hide)
         hl.addWidget(btn_close, 0, Qt.AlignmentFlag.AlignVCenter)
@@ -1508,7 +1606,7 @@ class SettingsWindow(QWidget):
         summary_wrap.setObjectName("PreviewSummaryPill")
         summary_wrap.setStyleSheet(
             f"#PreviewSummaryPill {{ background: {C_SURFACE}; "
-            "border: 1px solid rgba(255,255,255,0.06); border-radius: 9px; }"
+            "border: 1px solid rgba(226, 232, 240, 0.10); border-radius: 9px; }"
         )
         sum_vl = QVBoxLayout(summary_wrap)
         sum_vl.setContentsMargins(12, 9, 12, 9)
@@ -1539,9 +1637,9 @@ class SettingsWindow(QWidget):
         btn.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
         btn.setStyleSheet(
             f"QPushButton {{ background: {C_SURFACE}; color: #D1D5DB; "
-            "border: 1px solid rgba(255,255,255,0.08); border-radius: 7px; "
+            "border: 1px solid rgba(226, 232, 240, 0.12); border-radius: 7px; "
             "padding: 3px 8px; font-size: 11px; font-weight: 500; font-family: 'Segoe UI'; }"
-            "QPushButton:hover { background: #262933; color: #FFFFFF; }"
+            "QPushButton:hover { background: #282C37; color: #FFFFFF; border-color: rgba(226, 232, 240, 0.28); }"
             f"QPushButton:checked {{ background: rgba(59,130,246,0.22); color: {C_ACCENT_LIGHT}; "
             f"border-color: rgba(59,130,246,0.55); font-weight: 600; }}"
         )
@@ -1632,7 +1730,7 @@ class SettingsWindow(QWidget):
             else False
         )
         st_row, st_toggle = _toggle_row(
-            "Open TinyHand PRO when you sign in",
+            "Open TinyHand Windows when you sign in",
             "Start silently in the system tray on Windows boot",
             startup_on,
         )
@@ -1975,62 +2073,302 @@ class SettingsWindow(QWidget):
         return scroll
 
     # ==================================================================
-    # Page 5: About
+    # Page 5: About & Maintenance (Updates, Diagnostics & Bug Solvers)
     # ==================================================================
     def _page_about(self) -> QScrollArea:
         scroll, _inner, vbox = _page_scroll()
-        vbox.addStretch(1)
 
+        vbox.addWidget(_label("About & Maintenance", 18, C_TEXT, bold=True))
+
+        # Hero Banner
         hero_body = QVBoxLayout()
-        hero_body.setSpacing(8)
+        hero_body.setSpacing(6)
 
         icon_badge = QLabel()
-        icon_badge.setFixedSize(68, 68)
+        icon_badge.setFixedSize(60, 60)
         icon_badge.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        icon_badge.setPixmap(make_svg_icon("hand", "#FFFFFF", 36).pixmap(QSize(36, 36)))
-        icon_badge.setStyleSheet(f"background: {C_ACCENT}; border-radius: 17px;")
+        icon_badge.setPixmap(make_svg_icon("hand", "#FFFFFF", 32).pixmap(QSize(32, 32)))
+        icon_badge.setStyleSheet(f"background: {C_ACCENT}; border-radius: 16px;")
         hero_body.addWidget(icon_badge, 0, Qt.AlignmentFlag.AlignHCenter)
-        hero_body.addSpacing(4)
 
-        title = _label("TinyHand Windows", 22, C_TEXT, bold=True)
+        title = _label("TinyHand Windows", 20, C_TEXT, bold=True)
         title.setAlignment(Qt.AlignmentFlag.AlignCenter)
         hero_body.addWidget(title)
 
-        ver = _label("Version 1.0.0", 12, C_TEXT_SEC)
+        ver = _label(f"Version {APP_VERSION} · Windows 64-bit Native", 12, C_TEXT_SEC)
         ver.setAlignment(Qt.AlignmentFlag.AlignCenter)
         hero_body.addWidget(ver)
 
-        tag = _label("Floating presentation pointer, screen ink & spotlight for Windows.", 12, muted=True)
+        tag = _label("Hardware-accelerated presentation pointer, vector ink & cinema spotlight.", 11, muted=True)
         tag.setAlignment(Qt.AlignmentFlag.AlignCenter)
         hero_body.addWidget(tag)
         vbox.addWidget(SettingsGroup(hero_body))
 
+        # -------------------------------------------------------------
+        # Software Updates Section (Requested Feature)
+        # -------------------------------------------------------------
+        vbox.addWidget(_section_label("Software Updates"))
+        update_body = QVBoxLayout()
+        update_body.setSpacing(10)
+
+        up_top_row = QHBoxLayout()
+        up_top_row.setContentsMargins(0, 2, 0, 2)
+        up_info_col = QVBoxLayout()
+        up_info_col.setSpacing(2)
+
+        self._update_status_lbl = _label(f"Installed Version: v{APP_VERSION}", 12, C_TEXT, bold=True)
+        self._update_sub_lbl = _label("Check GitHub Releases for latest features and bug fixes.", 11, muted=True)
+        self._update_sub_lbl.setWordWrap(True)
+        up_info_col.addWidget(self._update_status_lbl)
+        up_info_col.addWidget(self._update_sub_lbl)
+        up_top_row.addLayout(up_info_col, 1)
+
+        self._btn_check_update = _button("Check for Updates", primary=True)
+        self._btn_check_update.clicked.connect(self._check_for_updates)
+        up_top_row.addWidget(self._btn_check_update, 0, Qt.AlignmentFlag.AlignVCenter)
+        update_body.addLayout(up_top_row)
+
+        # Dynamic update result card (revealed on check)
+        self._update_result_frame = QFrame()
+        self._update_result_frame.setStyleSheet(
+            f"background: rgba(30, 33, 42, 0.75); border: 1px solid {C_BORDER}; border-radius: 8px;"
+        )
+        self._update_result_frame.setVisible(False)
+        up_res_vl = QVBoxLayout(self._update_result_frame)
+        up_res_vl.setContentsMargins(12, 10, 12, 10)
+        up_res_vl.setSpacing(6)
+
+        self._update_msg_lbl = _label("", 12, C_TEXT, bold=True)
+        self._update_notes_lbl = _label("", 11, C_TEXT_MUTED)
+        self._update_notes_lbl.setWordWrap(True)
+        up_res_vl.addWidget(self._update_msg_lbl)
+        up_res_vl.addWidget(self._update_notes_lbl)
+
+        self._update_actions_row = QHBoxLayout()
+        self._update_actions_row.setSpacing(8)
+        self._btn_download_update = _button("Download Update (.exe)", primary=True)
+        self._btn_download_update.clicked.connect(self._on_download_update_clicked)
+        self._btn_view_release = _button("View on GitHub", outline=True)
+        self._btn_view_release.clicked.connect(self._on_view_release_clicked)
+        self._update_actions_row.addWidget(self._btn_download_update)
+        self._update_actions_row.addWidget(self._btn_view_release)
+        self._update_actions_row.addStretch()
+        up_res_vl.addLayout(self._update_actions_row)
+
+        update_body.addWidget(self._update_result_frame)
+        vbox.addWidget(SettingsGroup(update_body))
+
+        # -------------------------------------------------------------
+        # Diagnostics & Troubleshooting Section (Requested Feature)
+        # -------------------------------------------------------------
+        vbox.addWidget(_section_label("Diagnostics & Bug Troubleshooting"))
+        diag_body = QVBoxLayout()
+        diag_body.setSpacing(8)
+
+        diag_body.addWidget(
+            _label("Encountering an issue or click behavior glitch? Use these tools to repair or report.", 11, muted=True)
+        )
+
+        diag_btns_row = QHBoxLayout()
+        diag_btns_row.setSpacing(8)
+
+        self._btn_copy_diag = _button("Copy System Diagnostics")
+        self._btn_copy_diag.setToolTip("Copies OS, Python, DPI, and pointer config to clipboard for bug reports.")
+        self._btn_copy_diag.clicked.connect(self._copy_diagnostic_info)
+        diag_btns_row.addWidget(self._btn_copy_diag)
+
+        self._btn_repair_cfg = _button("Verify & Repair Config")
+        self._btn_repair_cfg.setToolTip("Validates and repairs missing config keys without losing custom uploads.")
+        self._btn_repair_cfg.clicked.connect(self._repair_config)
+        diag_btns_row.addWidget(self._btn_repair_cfg)
+
+        self._btn_open_appdata = _button("Open AppData Folder")
+        self._btn_open_appdata.setToolTip("Opens %LOCALAPPDATA%\\TinyHandWindows\\ where config and custom assets are stored.")
+        self._btn_open_appdata.clicked.connect(self._open_appdata_folder)
+        diag_btns_row.addWidget(self._btn_open_appdata)
+
+        diag_btns_row.addStretch()
+        diag_body.addLayout(diag_btns_row)
+
+        _add_hsep(diag_body)
+
+        report_row = QHBoxLayout()
+        report_row.setContentsMargins(0, 2, 0, 2)
+        report_row.addWidget(_label("Found a bug or have a suggestion?", 12, C_TEXT))
+        report_row.addStretch()
+        btn_report = _button("Report Bug on GitHub", outline=True)
+        btn_report.clicked.connect(self._report_bug)
+        report_row.addWidget(btn_report)
+        diag_body.addLayout(report_row)
+
+        vbox.addWidget(SettingsGroup(diag_body))
+
+        # -------------------------------------------------------------
+        # Project Specifications & License
+        # -------------------------------------------------------------
+        vbox.addWidget(_section_label("Specifications & Credits"))
         info_body = QVBoxLayout()
         info_body.setSpacing(6)
         for k, v in [
-            ("Platform", "Windows Desktop (PyQt6)"),
-            ("Pointers", "36 3D Hands, 4 Vector FX & Custom PNGs"),
-            ("Licenses", "MIT License · THIRD_PARTY_LICENSES.txt"),
+            ("Platform", "Windows 10 & 11 (64-bit Desktop)"),
+            ("Rendering Engine", "PyQt6 Layered Transparent Overlay (Win32)"),
+            ("Pointers Included", "36 3D Hands + 4 Vector FX + Custom PNGs"),
+            ("Repository", "github.com/wajahat-alip/tinyhand-windows"),
+            ("License", "100% Free & Open Source (MIT)"),
         ]:
             r = QHBoxLayout()
             r.addWidget(_label(k, 12, C_TEXT_SEC))
             r.addStretch()
             r.addWidget(_label(v, 12, C_TEXT, bold=True))
             info_body.addLayout(r)
-            if k != "Licenses":
+            if k != "License":
                 _add_hsep(info_body)
         vbox.addWidget(SettingsGroup(info_body))
 
-        credit = _label("Inspired by TinyHand (macOS)", 11, muted=True)
+        credit = _label("Inspired by nilbuild/tinyhand (macOS) by Kamran Ahmed.", 11, muted=True)
         credit.setAlignment(Qt.AlignmentFlag.AlignCenter)
         vbox.addWidget(credit)
 
-        reset_btn = _button("Reset All Settings", danger=True)
-        reset_btn.setFixedWidth(180)
+        reset_btn = _button("Reset All Settings to Defaults", danger=True)
+        reset_btn.setFixedWidth(220)
         reset_btn.clicked.connect(self._reset_all_settings)
         vbox.addWidget(reset_btn, 0, Qt.AlignmentFlag.AlignHCenter)
-        vbox.addStretch(1)
+
+        vbox.addSpacing(16)
         return scroll
+
+    # -------------------------------------------------------------
+    # Update & Diagnostics Action Handlers
+    # -------------------------------------------------------------
+    def _check_for_updates(self):
+        self._btn_check_update.setEnabled(False)
+        self._btn_check_update.setText("Checking...")
+        self._update_status_lbl.setText("Checking GitHub for releases...")
+        self._update_sub_lbl.setText("Querying https://api.github.com/repos/wajahat-alip/tinyhand-windows/releases/latest...")
+
+        self._update_worker = UpdateCheckerThread(APP_VERSION, "wajahat-alip/tinyhand-windows", self)
+        self._update_worker.check_finished.connect(self._on_update_check_finished)
+        self._update_worker.start()
+
+    def _on_update_check_finished(self, res: dict):
+        self._btn_check_update.setEnabled(True)
+        self._btn_check_update.setText("Check for Updates")
+        self._last_update_info = res
+
+        if not res.get("success"):
+            self._update_status_lbl.setText("Check Failed (Network Error)")
+            self._update_sub_lbl.setText(f"Could not reach GitHub ({res.get('error', 'Unknown')}). You can visit releases manually.")
+            self._update_result_frame.setVisible(True)
+            self._update_msg_lbl.setText("Unable to verify latest release automatically")
+            self._update_msg_lbl.setStyleSheet(f"color: {C_DANGER}; font-size: 12px; font-weight: 600;")
+            self._update_notes_lbl.setText("Please check your internet connection or browse releases on GitHub.")
+            self._btn_download_update.setVisible(False)
+            self._btn_view_release.setVisible(True)
+            self._btn_view_release.setText("Open GitHub Releases")
+            return
+
+        is_new = res.get("is_new", False)
+        latest_ver = res.get("latest_version", APP_VERSION)
+        notes = res.get("notes", "")
+
+        self._update_result_frame.setVisible(True)
+        if is_new:
+            self._update_status_lbl.setText(f"Update Available: v{latest_ver}!")
+            self._update_status_lbl.setStyleSheet(f"color: {C_ACCENT_LIGHT}; font-size: 12px; font-weight: 600;")
+            self._update_sub_lbl.setText(f"A newer version (v{latest_ver}) is available for download.")
+            self._update_msg_lbl.setText(f"New Version v{latest_ver} Available!")
+            self._update_msg_lbl.setStyleSheet(f"color: {C_SUCCESS}; font-size: 12px; font-weight: 600;")
+            self._update_notes_lbl.setText(notes if notes else "Performance improvements, bug fixes and enhancements.")
+            self._btn_download_update.setVisible(True)
+            self._btn_view_release.setVisible(True)
+            self._btn_view_release.setText("View Release Notes")
+        else:
+            self._update_status_lbl.setText(f"You're Up to Date (v{APP_VERSION})")
+            self._update_status_lbl.setStyleSheet(f"color: {C_SUCCESS}; font-size: 12px; font-weight: 600;")
+            self._update_sub_lbl.setText("You are currently running the latest official version of TinyHand Windows.")
+            self._update_msg_lbl.setText(f"TinyHand Windows v{APP_VERSION} is the latest version.")
+            self._update_msg_lbl.setStyleSheet(f"color: {C_SUCCESS}; font-size: 12px; font-weight: 600;")
+            self._update_notes_lbl.setText("No new updates are pending. All features are up to date.")
+            self._btn_download_update.setVisible(False)
+            self._btn_view_release.setVisible(True)
+            self._btn_view_release.setText("Visit GitHub Releases")
+
+    def _on_download_update_clicked(self):
+        url = str(self._last_update_info.get("download_url") or "https://github.com/wajahat-alip/tinyhand-windows/releases/latest")
+        QDesktopServices.openUrl(QUrl(url))
+
+    def _on_view_release_clicked(self):
+        url = str(self._last_update_info.get("release_url") or "https://github.com/wajahat-alip/tinyhand-windows/releases")
+        QDesktopServices.openUrl(QUrl(url))
+
+    def _gather_diagnostic_info(self) -> str:
+        import platform
+        screen = QGuiApplication.primaryScreen()
+        scr_geom = screen.geometry() if screen else None
+        dpr = screen.devicePixelRatio() if screen else 1.0
+
+        info = [
+            "### TinyHand Windows — Diagnostic Report",
+            f"- **App Version**: {APP_VERSION}",
+            f"- **OS**: Windows {platform.platform()} ({platform.architecture()[0]})",
+            f"- **Python**: {platform.python_version()}",
+            f"- **Screen Resolution**: {scr_geom.width()}x{scr_geom.height()} @ {dpr:.1f}x DPI" if scr_geom else "- **Screen**: Unknown",
+            f"- **Active Pointer**: {self.config.get('pointer_style', 'coral')} (Scale: {self.config.get('pointer_scale', 2)})",
+            f"- **Drawing Mode**: Smooth={self.config.get('smooth_lines', False)} (Strength={self.config.get('smooth_strength', 5)})",
+            f"- **Config Path**: {os.path.join(self.app_dir, 'config.json')}",
+            f"- **Custom Hands Loaded**: {len(self.config.get('custom_hands', []))}",
+            f"- **Custom Sounds Loaded**: {len(self.config.get('custom_sounds', []))}",
+        ]
+        return "\n".join(info)
+
+    def _copy_diagnostic_info(self):
+        info = self._gather_diagnostic_info()
+        clipboard = QGuiApplication.clipboard()
+        if clipboard:
+            clipboard.setText(info)
+            old_txt = self._btn_copy_diag.text()
+            self._btn_copy_diag.setText("Copied to Clipboard!")
+            self._btn_copy_diag.setStyleSheet(
+                f"QPushButton {{ background: rgba(52, 211, 153, 0.20); color: {C_SUCCESS}; "
+                f"border: 1px solid {C_SUCCESS}; border-radius: 7px; padding: 7px 14px; font-weight: 600; font-size: 12px; }}"
+            )
+            QTimer.singleShot(2500, lambda: self._restore_copy_diag_btn(old_txt))
+
+    def _restore_copy_diag_btn(self, old_txt: str):
+        self._btn_copy_diag.setText(old_txt)
+        self._btn_copy_diag.setStyleSheet(
+            "QPushButton { background: #242732; color: #E5E7EB; "
+            "border: 1px solid rgba(226, 232, 240, 0.12); border-radius: 7px; "
+            "padding: 7px 14px; font-weight: 500; font-size: 12px; font-family: 'Segoe UI'; }"
+            "QPushButton:hover { background: #2D313E; color: #FFFFFF; border-color: rgba(226, 232, 240, 0.25); }"
+        )
+
+    def _repair_config(self):
+        try:
+            self.config.load()
+            from config import DEFAULTS
+            repaired = 0
+            for k, v in DEFAULTS.items():
+                if k not in self.config._data:
+                    self.config._data[k] = v
+                    repaired += 1
+            self.config.save()
+            QMessageBox.information(
+                self,
+                "Config Verification",
+                f"Configuration is healthy and verified!\n{repaired} missing keys restored with defaults.\nCustom hands and sounds are preserved.",
+            )
+        except Exception as e:
+            QMessageBox.warning(self, "Repair Warning", f"Could not verify config: {e}")
+
+    def _open_appdata_folder(self):
+        if os.path.exists(self.app_dir):
+            os.startfile(self.app_dir)
+        else:
+            QMessageBox.information(self, "AppData Folder", f"Data path:\n{self.app_dir}")
+
+    def _report_bug(self):
+        QDesktopServices.openUrl(QUrl("https://github.com/wajahat-alip/tinyhand-windows/issues/new"))
 
     # ==================================================================
     # Synchronization & Signal Handlers
@@ -2440,12 +2778,12 @@ class SettingsWindow(QWidget):
     def _combo_qss() -> str:
         return (
             f"QComboBox {{ background: {C_CONTROL_BG}; color: {C_TEXT}; "
-            "border: 1px solid rgba(255, 255, 255, 0.10); border-radius: 7px; "
+            "border: 1px solid rgba(226, 232, 240, 0.12); border-radius: 7px; "
             "padding: 4px 10px; font-size: 12px; font-family: 'Segoe UI'; }"
-            "QComboBox:hover { border-color: rgba(255, 255, 255, 0.25); }"
+            "QComboBox:hover { border-color: rgba(226, 232, 240, 0.30); }"
             "QComboBox::drop-down { border: none; width: 20px; }"
-            f"QComboBox QAbstractItemView {{ background: {C_SURFACE}; color: {C_TEXT}; "
-            "border: 1px solid rgba(255, 255, 255, 0.14); "
+            f"QComboBox QAbstractItemView {{ background: {C_CONTROL_BG}; color: {C_TEXT}; "
+            "border: 1px solid rgba(226, 232, 240, 0.16); "
             f"selection-background-color: {C_ACCENT}; selection-color: #FFFFFF; }}"
         )
 
