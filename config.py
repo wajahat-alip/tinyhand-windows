@@ -65,6 +65,7 @@ DEFAULTS: Dict[str, Any] = {
     # App
     "hud_x": -1,
     "hud_y": -1,
+    "theme_mode": "dark",  # "dark" / "light"
     "launch_at_startup": False,
     "custom_hands": [],  # list of {"key": str, "name": str, "filename": str}
 }
