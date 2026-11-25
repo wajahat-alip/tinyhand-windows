@@ -5,7 +5,7 @@ Generates crisp, DPI-aware QIcon instances with zero raw emoji dependencies.
 """
 
 from PyQt6.QtCore import QByteArray, QRectF, Qt
-from PyQt6.QtGui import QColor, QIcon, QPainter, QPixmap
+from PyQt6.QtGui import QColor, QIcon, QPainter, QPainterPath, QPixmap
 from PyQt6.QtSvg import QSvgRenderer
 
 
@@ -111,18 +111,38 @@ _SVG_TEMPLATES = {
         '<line x1="12" y1="8" x2="12.01" y2="8"/>'
         '</svg>'
     ),
-    "sun": (
+    "info_i": (
+        '<svg viewBox="0 0 24 24" fill="none" stroke="{color}" stroke-width="2.4" '
+        'stroke-linecap="round" stroke-linejoin="round">'
+        '<circle cx="12" cy="6.5" r="1.2" fill="{color}" stroke="none"/>'
+        '<line x1="12" y1="11" x2="12" y2="18.5"/>'
+        '</svg>'
+    ),
+    "sparkles": (
         '<svg viewBox="0 0 24 24" fill="none" stroke="{color}" stroke-width="2" '
         'stroke-linecap="round" stroke-linejoin="round">'
-        '<circle cx="12" cy="12" r="4"/>'
-        '<path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2'
-        'M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/>'
+        '<path d="M12 3l1.9 5.2L19 10l-5.1 1.8L12 17l-1.9-5.2L5 10l5.1-1.8L12 3z"/>'
+        '<path d="M19 16l.9 2.1L22 19l-2.1.9L19 22l-.9-2.1L16 19l2.1-.9L19 16z"/>'
+        '</svg>'
+    ),
+    "sun": (
+        '<svg viewBox="0 0 24 24" fill="none" stroke="{color}" stroke-width="2.1" '
+        'stroke-linecap="round" stroke-linejoin="round">'
+        '<circle cx="12" cy="12" r="4.2"/>'
+        '<line x1="12" y1="2.2" x2="12" y2="4.4"/>'
+        '<line x1="12" y1="19.6" x2="12" y2="21.8"/>'
+        '<line x1="4.93" y1="4.93" x2="6.49" y2="6.49"/>'
+        '<line x1="17.51" y1="17.51" x2="19.07" y2="19.07"/>'
+        '<line x1="2.2" y1="12" x2="4.4" y2="12"/>'
+        '<line x1="19.6" y1="12" x2="21.8" y2="12"/>'
+        '<line x1="4.93" y1="19.07" x2="6.49" y2="17.51"/>'
+        '<line x1="17.51" y1="6.49" x2="19.07" y2="4.93"/>'
         '</svg>'
     ),
     "moon": (
-        '<svg viewBox="0 0 24 24" fill="none" stroke="{color}" stroke-width="2" '
+        '<svg viewBox="0 0 24 24" fill="none" stroke="{color}" stroke-width="2.1" '
         'stroke-linecap="round" stroke-linejoin="round">'
-        '<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>'
+        '<path d="M20.5 13.2A8.5 8.5 0 1 1 10.8 3.5a6.8 6.8 0 0 0 9.7 9.7z"/>'
         '</svg>'
     ),
 }
@@ -190,3 +210,34 @@ def make_tray_icon() -> QIcon:
 
     pixmap.setDevicePixelRatio(scale)
     return QIcon(pixmap)
+
+
+def make_sidebar_badge_pixmap(
+    name: str,
+    badge_color: str,
+    size: int = 24,
+    radius: float = 6.0,
+) -> QPixmap:
+    """Render a crisp 24x24 rounded-square colorful badge with a white SVG icon."""
+    scale = 2
+    px = size * scale
+    pixmap = QPixmap(px, px)
+    pixmap.fill(Qt.GlobalColor.transparent)
+
+    painter = QPainter(pixmap)
+    painter.setRenderHint(QPainter.RenderHint.Antialiasing, True)
+    painter.setRenderHint(QPainter.RenderHint.SmoothPixmapTransform, True)
+
+    rect = QRectF(0.0, 0.0, float(px), float(px))
+    path = QPainterPath()
+    path.addRoundedRect(rect, radius * scale, radius * scale)
+    painter.fillPath(path, QColor(badge_color))
+
+    svg_bytes = _SVG_TEMPLATES.get(name, _SVG_TEMPLATES["hand"]).format(color="#FFFFFF").encode("utf-8")
+    renderer = QSvgRenderer(QByteArray(svg_bytes))
+    pad = 4.5 * scale
+    renderer.render(painter, QRectF(pad, pad, px - 2 * pad, px - 2 * pad))
+    painter.end()
+
+    pixmap.setDevicePixelRatio(scale)
+    return pixmap

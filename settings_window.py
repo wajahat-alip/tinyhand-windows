@@ -1,17 +1,19 @@
 # -*- coding: utf-8 -*-
 """
 Settings Window for TinyHand Windows.
-Clean, restrained dark-graphite utility interface inspired by native studio tools:
-  - Minimal frameless window with crisp titlebar and single-line sidebar navigation
-  - Elevated graphite surface groups (#1B1D23) with hairline dividers
-  - Searchable 40+ Pointer Gallery (all 36 3D PNG hands + 4 vector FX + custom PNGs)
-  - Live interactive preview canvas (hand kinematics, scaling, shadow, ink drawing,
-    click ripples, comic pop bubbles, and cinema spotlight)
+Centralized translucent dual-theme architecture (Dark Graphite & Soft Light Gray):
+  - Single root QSS stylesheet driven by DARK_THEME / LIGHT_THEME dictionaries
+  - Zero scattered inline child stylesheets; instant synchronized theme switching
+  - Native Windows DWM blur-behind translucency on rounded frameless window
+  - Single crisp Sun/Moon vector icon toggle in top-right title bar
+  - 6 colorful rounded-square 24x24 vector sidebar navigation badges
+  - Searchable 40+ Pointer Gallery, Style & FX, Ink & Draw, Sound, and About/Updater
 """
 
 import math
 import os
 import shutil
+import sys
 import time
 from typing import Any, Callable, Dict, List, Optional, Tuple
 
@@ -51,7 +53,6 @@ from PyQt6.QtWidgets import (
     QComboBox,
     QFileDialog,
     QFrame,
-    QGraphicsDropShadowEffect,
     QGridLayout,
     QHBoxLayout,
     QLabel,
@@ -66,152 +67,596 @@ from PyQt6.QtWidgets import (
 
 from config import APP_NAME, APP_VERSION
 from hand_engine import HAND_CATALOG, CustomFunnyPointers, HandAsset
-from icons import make_svg_icon
+from icons import make_sidebar_badge_pixmap, make_svg_icon
 from ink_engine import InkEngine
 from overlay_window import ClickRipple, ComicBubble
 
+
 # ---------------------------------------------------------------------------
-# World-Class Dual Themes: Dark Graphite & Soft Light Gray Translucent Glass
+# Background Worker: Check for GitHub Releases asynchronously
 # ---------------------------------------------------------------------------
-THEMES: Dict[str, Dict[str, Any]] = {
-    "dark": {
-        "mode": "dark",
-        "win_grad_start": QColor(24, 26, 31, 230),
-        "win_grad_end": QColor(18, 20, 25, 240),
-        "win_border": QColor(47, 51, 61, 200),
-        "c_win_bg": "rgba(24, 26, 31, 0.90)",
-        "c_titlebar": "rgba(20, 22, 27, 0.92)",
-        "c_sidebar": "rgba(20, 22, 27, 0.92)",
-        "c_sidebar_border": "#2F333D",
-        "c_content": "transparent",
-        "c_surface": "rgba(30, 32, 37, 0.85)",
-        "c_surface_hover": "rgba(37, 40, 48, 0.92)",
-        "c_control_bg": "rgba(22, 24, 29, 0.85)",
-        "c_border": "#2F333D",
-        "c_border_light": "#454B59",
-        "c_border_active": "#3B82F6",
-        "c_accent": "#3B82F6",
-        "c_accent_light": "#60A5FA",
-        "c_text": "#F3F4F6",
-        "c_text_sec": "#D1D5DB",
-        "c_text_muted": "#9CA3AF",
-        "c_track_off": "#2F333D",
-        "c_success": "#10B981",
-        "c_danger": "#EF4444",
-        "card_bg": QColor(30, 32, 37, 185),
-        "card_bg_hover": QColor(37, 40, 48, 210),
-        "card_border": QColor(47, 51, 61, 180),
-        "card_border_hover": QColor(69, 75, 89, 220),
-        "tile_bg": QColor(28, 30, 36, 180),
-        "tile_bg_hover": QColor(36, 40, 49, 210),
-        "tile_border": QColor(47, 51, 61, 160),
-        "tile_border_hover": QColor(65, 72, 85, 200),
-        "tile_bg_selected": QColor(30, 45, 75, 230),
-        "tile_border_selected": QColor("#3B82F6"),
-        "stage_bg": QColor(16, 18, 23, 235),
-        "stage_dot": QColor(255, 255, 255, 18),
-        "stage_border": QColor(47, 51, 61, 180),
-        "nav_active_bg": QColor(35, 45, 68, 210),
-        "nav_active_border": QColor(59, 130, 246, 140),
-        "nav_hover_bg": QColor(30, 33, 40, 160),
-        "nav_hover_border": QColor(47, 51, 61, 140),
-        "upload_bg": "rgba(22, 24, 29, 0.70)",
-        "upload_border": "#2F333D",
-        "ctrl_bg": QColor(22, 24, 29, 215),
-    },
-    "light": {
-        "mode": "light",
-        "win_grad_start": QColor(230, 232, 236, 230),
-        "win_grad_end": QColor(220, 224, 230, 240),
-        "win_border": QColor(196, 201, 210, 230),
-        "c_win_bg": "rgba(230, 232, 236, 0.90)",
-        "c_titlebar": "rgba(224, 227, 233, 0.92)",
-        "c_sidebar": "rgba(218, 222, 228, 0.92)",
-        "c_sidebar_border": "#C4C9D2",
-        "c_content": "transparent",
-        "c_surface": "rgba(230, 232, 236, 0.85)",
-        "c_surface_hover": "rgba(238, 240, 243, 0.92)",
-        "c_control_bg": "rgba(214, 219, 226, 0.85)",
-        "c_border": "#C4C9D2",
-        "c_border_light": "#A0A8B4",
-        "c_border_active": "#2563EB",
-        "c_accent": "#2563EB",
-        "c_accent_light": "#3B82F6",
-        "c_text": "#181A1F",
-        "c_text_sec": "#333742",
-        "c_text_muted": "#6B7280",
-        "c_track_off": "#C4C9D2",
-        "c_success": "#059669",
-        "c_danger": "#DC2626",
-        "card_bg": QColor(230, 232, 236, 175),
-        "card_bg_hover": QColor(238, 240, 243, 205),
-        "card_border": QColor(196, 201, 210, 200),
-        "card_border_hover": QColor(160, 168, 180, 230),
-        "tile_bg": QColor(220, 224, 230, 180),
-        "tile_bg_hover": QColor(230, 234, 240, 210),
-        "tile_border": QColor(196, 201, 210, 190),
-        "tile_border_hover": QColor(170, 178, 190, 220),
-        "tile_bg_selected": QColor(210, 225, 250, 220),
-        "tile_border_selected": QColor("#2563EB"),
-        "stage_bg": QColor(220, 224, 230, 230),
-        "stage_dot": QColor(160, 168, 180, 110),
-        "stage_border": QColor(196, 201, 210, 200),
-        "nav_active_bg": QColor(210, 225, 250, 220),
-        "nav_active_border": QColor(37, 99, 235, 160),
-        "nav_hover_bg": QColor(224, 228, 234, 180),
-        "nav_hover_border": QColor(196, 201, 210, 160),
-        "upload_bg": "rgba(220, 224, 230, 0.70)",
-        "upload_border": "#C4C9D2",
-        "ctrl_bg": QColor(214, 219, 226, 215),
-    },
+class UpdateCheckerThread(QThread):
+    """Background worker to query GitHub Releases without blocking the UI thread."""
+
+    check_finished = pyqtSignal(dict)
+
+    def __init__(
+        self,
+        current_version: str = "1.0.0",
+        repo: str = "wajahat-alip/tinyhand-windows",
+        parent: Optional[QWidget] = None,
+    ):
+        super().__init__(parent)
+        self.current_version = str(current_version).lstrip("v")
+        self.repo = repo
+
+    def run(self):
+        import json
+        import urllib.request
+
+        api_url = f"https://api.github.com/repos/{self.repo}/releases/latest"
+        req = urllib.request.Request(
+            api_url,
+            headers={
+                "User-Agent": "TinyHand-Windows-Updater",
+                "Accept": "application/vnd.github.v3+json",
+            },
+        )
+        try:
+            with urllib.request.urlopen(req, timeout=8) as resp:
+                data = json.loads(resp.read().decode("utf-8"))
+                tag_name = data.get("tag_name", "").lstrip("v")
+                html_url = data.get("html_url", f"https://github.com/{self.repo}/releases")
+                body = data.get("body", "")
+
+                is_newer = False
+                if tag_name:
+                    curr_parts = [int(p) for p in self.current_version.split(".") if p.isdigit()]
+                    tag_parts = [int(p) for p in tag_name.split(".") if p.isdigit()]
+                    while len(curr_parts) < 3:
+                        curr_parts.append(0)
+                    while len(tag_parts) < 3:
+                        tag_parts.append(0)
+                    is_newer = tag_parts > curr_parts
+
+                download_url = html_url
+                for asset in data.get("assets", []):
+                    if asset.get("name", "").endswith(".exe"):
+                        download_url = asset.get("browser_download_url", html_url)
+                        break
+
+                self.check_finished.emit(
+                    {
+                        "success": True,
+                        "latest_version": tag_name or APP_VERSION,
+                        "is_new": is_newer,
+                        "download_url": download_url,
+                        "release_url": html_url,
+                        "notes": (body[:260] + "...") if len(body) > 260 else body,
+                        "error": "",
+                    }
+                )
+        except Exception as e:
+            self.check_finished.emit(
+                {
+                    "success": False,
+                    "latest_version": self.current_version,
+                    "is_new": False,
+                    "download_url": f"https://github.com/{self.repo}/releases",
+                    "release_url": f"https://github.com/{self.repo}/releases",
+                    "notes": "",
+                    "error": str(e),
+                }
+            )
+
+
+# ---------------------------------------------------------------------------
+# Centralized Theme Dictionaries: DARK_THEME & LIGHT_THEME
+# ---------------------------------------------------------------------------
+DARK_THEME: Dict[str, Any] = {
+    "mode": "dark",
+    # Window translucent glass backdrop
+    "win_grad_start": QColor(24, 26, 31, 230),
+    "win_grad_end": QColor(18, 20, 25, 238),
+    "win_border": QColor(47, 51, 61, 210),
+    # Structural chrome & dividers
+    "c_titlebar": "rgba(20, 22, 27, 225)",
+    "c_sidebar": "rgba(20, 22, 27, 220)",
+    "c_sidebar_border": "#2F333D",
+    "title_btn_hover": "rgba(255, 255, 255, 22)",
+    # Surfaces & controls
+    "c_surface": "rgba(30, 32, 37, 220)",
+    "c_surface_hover": "rgba(37, 40, 48, 235)",
+    "c_control_bg": "rgba(37, 40, 48, 220)",
+    "c_input_bg": "#1E2025",
+    "c_input_focus_bg": "#252830",
+    "c_combo_popup_bg": "#1E2025",
+    "c_border": "#2F333D",
+    "c_border_light": "#454B59",
+    "c_accent": "#3B82F6",
+    "c_accent_light": "#60A5FA",
+    "c_accent_hover": "#2563EB",
+    "c_accent_fg": "#F8FAFC",
+    "c_checked_bg": "#1E3A8A",
+    "c_checked_fg": "#93C5FD",
+    "c_checked_bd": "#3B82F6",
+    # Typography
+    "c_text": "#F3F4F6",
+    "c_text_sec": "#D1D5DB",
+    "c_text_muted": "#9CA3AF",
+    "c_tile_sel_txt": "#F3F4F6",
+    # Semantic
+    "c_track_off": "#2F333D",
+    "c_success": "#10B981",
+    "c_danger": "#EF4444",
+    "danger_bg": "rgba(239, 68, 68, 38)",
+    "danger_fg": "#FCA5A5",
+    "danger_bd": "rgba(239, 68, 68, 110)",
+    "danger_hbg": "#DC2626",
+    "danger_hfg": "#F8FAFC",
+    "success_bg": "#064E3B",
+    "success_fg": "#6EE7B7",
+    "scroll_bg": "#3B404D",
+    "scroll_hover": "#525866",
+    # Segmented buttons & custom rows
+    "seg_btn_fg": "#D1D5DB",
+    "seg_btn_hover_bg": "#2E3547",
+    "seg_btn_hover_fg": "#F3F4F6",
+    "use_btn_bg": "#1E3A8A",
+    "use_btn_fg": "#93C5FD",
+    # QPainter shapes
+    "ctrl_bg": QColor(37, 40, 48, 220),
+    "card_bg": QColor(30, 32, 37, 205),
+    "card_bg_hover": QColor(37, 40, 48, 225),
+    "card_border": QColor(47, 51, 61, 195),
+    "card_border_hover": QColor(69, 75, 89, 225),
+    "tile_bg": QColor(30, 32, 37, 200),
+    "tile_bg_hover": QColor(37, 40, 48, 225),
+    "tile_border": QColor(47, 51, 61, 185),
+    "tile_border_hover": QColor(69, 75, 89, 220),
+    "tile_bg_selected": QColor(30, 48, 82, 230),
+    "tile_border_selected": QColor("#3B82F6"),
+    "stage_bg": QColor(17, 19, 24, 235),
+    "stage_dot": QColor(255, 255, 255, 20),
+    "stage_border": QColor(47, 51, 61, 200),
+    "nav_active_bg": QColor(59, 130, 246, 42),
+    "nav_active_border": QColor(59, 130, 246, 135),
+    "nav_hover_bg": QColor(37, 40, 48, 175),
+    "nav_hover_border": QColor(47, 51, 61, 160),
 }
 
-CURRENT_THEME: Dict[str, Any] = THEMES["dark"]
+LIGHT_THEME: Dict[str, Any] = {
+    "mode": "light",
+    # Soft translucent Light Gray glass backdrop (zero stark #FFFFFF)
+    "win_grad_start": QColor(230, 232, 236, 225),
+    "win_grad_end": QColor(220, 224, 230, 232),
+    "win_border": QColor(194, 199, 208, 230),
+    # Structural chrome & dividers
+    "c_titlebar": "rgba(222, 226, 232, 220)",
+    "c_sidebar": "rgba(218, 222, 228, 218)",
+    "c_sidebar_border": "#C2C7D0",
+    "title_btn_hover": "rgba(24, 26, 31, 20)",
+    # Surfaces & controls
+    "c_surface": "rgba(220, 224, 230, 215)",
+    "c_surface_hover": "rgba(209, 213, 219, 235)",
+    "c_control_bg": "rgba(209, 213, 219, 215)",
+    "c_input_bg": "#DCE0E6",
+    "c_input_focus_bg": "#E6E8EC",
+    "c_combo_popup_bg": "#DCE0E6",
+    "c_border": "#C2C7D0",
+    "c_border_light": "#9CA3AF",
+    "c_accent": "#2563EB",
+    "c_accent_light": "#3B82F6",
+    "c_accent_hover": "#1D4ED8",
+    "c_accent_fg": "#F8FAFC",
+    "c_checked_bg": "#2563EB",
+    "c_checked_fg": "#F8FAFC",
+    "c_checked_bd": "#1D4ED8",
+    # Typography
+    "c_text": "#181A1F",
+    "c_text_sec": "#374151",
+    "c_text_muted": "#6B7280",
+    "c_tile_sel_txt": "#1D4ED8",
+    # Semantic
+    "c_track_off": "#BFC5CF",
+    "c_success": "#059669",
+    "c_danger": "#DC2626",
+    "danger_bg": "rgba(220, 38, 38, 28)",
+    "danger_fg": "#B91C1C",
+    "danger_bd": "rgba(220, 38, 38, 120)",
+    "danger_hbg": "#DC2626",
+    "danger_hfg": "#F8FAFC",
+    "success_bg": "#D1FAE5",
+    "success_fg": "#065F46",
+    "scroll_bg": "#B8BFC9",
+    "scroll_hover": "#8D96A5",
+    # Segmented buttons & custom rows
+    "seg_btn_fg": "#4B5563",
+    "seg_btn_hover_bg": "#C8CED8",
+    "seg_btn_hover_fg": "#181A1F",
+    "use_btn_bg": "rgba(37, 99, 235, 28)",
+    "use_btn_fg": "#1D4ED8",
+    # QPainter shapes (soft light gray, zero stark white)
+    "ctrl_bg": QColor(209, 213, 219, 220),
+    "card_bg": QColor(226, 229, 234, 200),
+    "card_bg_hover": QColor(232, 235, 240, 220),
+    "card_border": QColor(194, 199, 208, 215),
+    "card_border_hover": QColor(156, 163, 175, 230),
+    "tile_bg": QColor(220, 224, 230, 215),
+    "tile_bg_hover": QColor(228, 232, 238, 235),
+    "tile_border": QColor(194, 199, 208, 205),
+    "tile_border_hover": QColor(156, 163, 175, 225),
+    "tile_bg_selected": QColor(205, 221, 248, 230),
+    "tile_border_selected": QColor("#2563EB"),
+    "stage_bg": QColor(216, 220, 227, 230),
+    "stage_dot": QColor(148, 156, 168, 120),
+    "stage_border": QColor(194, 199, 208, 220),
+    "nav_active_bg": QColor(37, 99, 235, 34),
+    "nav_active_border": QColor(37, 99, 235, 130),
+    "nav_hover_bg": QColor(194, 199, 208, 110),
+    "nav_hover_border": QColor(194, 199, 208, 160),
+}
 
-C_WIN_BG = CURRENT_THEME["c_win_bg"]
-C_SIDEBAR = CURRENT_THEME["c_sidebar"]
-C_CONTENT = CURRENT_THEME["c_content"]
-C_SURFACE = CURRENT_THEME["c_surface"]
-C_SURFACE_HOVER = CURRENT_THEME["c_surface_hover"]
-C_CONTROL_BG = CURRENT_THEME["c_control_bg"]
-C_BORDER = CURRENT_THEME["c_border"]
-C_BORDER_LIGHT = CURRENT_THEME["c_border_light"]
-C_BORDER_ACTIVE = CURRENT_THEME["c_border_active"]
-C_ACCENT = CURRENT_THEME["c_accent"]
-C_ACCENT_LIGHT = CURRENT_THEME["c_accent_light"]
-C_TEXT = CURRENT_THEME["c_text"]
-C_TEXT_SEC = CURRENT_THEME["c_text_sec"]
-C_TEXT_MUTED = CURRENT_THEME["c_text_muted"]
-C_TRACK_OFF = CURRENT_THEME["c_track_off"]
-C_SUCCESS = CURRENT_THEME["c_success"]
-C_DANGER = CURRENT_THEME["c_danger"]
+THEMES: Dict[str, Dict[str, Any]] = {
+    "dark": DARK_THEME,
+    "light": LIGHT_THEME,
+}
+
+CURRENT_THEME: Dict[str, Any] = DARK_THEME
 
 
-def set_active_theme(mode: str):
-    global CURRENT_THEME, C_WIN_BG, C_SIDEBAR, C_CONTENT, C_SURFACE, C_SURFACE_HOVER
-    global C_CONTROL_BG, C_BORDER, C_BORDER_LIGHT, C_BORDER_ACTIVE, C_ACCENT, C_ACCENT_LIGHT
-    global C_TEXT, C_TEXT_SEC, C_TEXT_MUTED, C_TRACK_OFF, C_SUCCESS, C_DANGER
+def set_active_theme(mode: str) -> Dict[str, Any]:
+    global CURRENT_THEME
     if mode not in THEMES:
         mode = "dark"
-    t = THEMES[mode]
-    CURRENT_THEME = t
-    C_WIN_BG = t["c_win_bg"]
-    C_SIDEBAR = t["c_sidebar"]
-    C_CONTENT = t["c_content"]
-    C_SURFACE = t["c_surface"]
-    C_SURFACE_HOVER = t["c_surface_hover"]
-    C_CONTROL_BG = t["c_control_bg"]
-    C_BORDER = t["c_border"]
-    C_BORDER_LIGHT = t["c_border_light"]
-    C_BORDER_ACTIVE = t["c_border_active"]
-    C_ACCENT = t["c_accent"]
-    C_ACCENT_LIGHT = t["c_accent_light"]
-    C_TEXT = t["c_text"]
-    C_TEXT_SEC = t["c_text_sec"]
-    C_TEXT_MUTED = t["c_text_muted"]
-    C_TRACK_OFF = t["c_track_off"]
-    C_SUCCESS = t["c_success"]
-    C_DANGER = t["c_danger"]
+    CURRENT_THEME = THEMES[mode]
+    return CURRENT_THEME
+
+
+def build_root_stylesheet(t: Dict[str, Any]) -> str:
+    """Build one cohesive root QSS stylesheet governing every widget in the window."""
+    return f"""
+    #SettingsRoot {{
+        background: transparent;
+    }}
+    #TitleBar {{
+        background: {t['c_titlebar']};
+        border-top-left-radius: 13px;
+        border-top-right-radius: 13px;
+    }}
+    #TitleBadge {{
+        background: {t['c_accent']};
+        border-radius: 6px;
+    }}
+    #TitleLabel {{
+        color: {t['c_text']};
+        font-size: 13px;
+        font-weight: 600;
+        background: transparent;
+        border: none;
+        font-family: 'Segoe UI', sans-serif;
+    }}
+    #ThemeToggleBtn, #TitleMinBtn, #TitleCloseBtn {{
+        background: transparent;
+        border: none;
+        border-radius: 6px;
+    }}
+    #ThemeToggleBtn:hover, #TitleMinBtn:hover {{
+        background: {t['title_btn_hover']};
+    }}
+    #TitleCloseBtn:hover {{
+        background: #DC2626;
+    }}
+    #Sidebar {{
+        background: {t['c_sidebar']};
+        border-bottom-left-radius: 13px;
+    }}
+    #PreviewDock {{
+        background: {t['c_sidebar']};
+        border-bottom-right-radius: 13px;
+    }}
+    #PreviewSummaryPill {{
+        background: {t['c_surface']};
+        border: 1px solid {t['c_border']};
+        border-radius: 9px;
+    }}
+    #AboutHeroBadge {{
+        background: {t['c_accent']};
+        border-radius: 16px;
+    }}
+    #UpdateResultFrame {{
+        background: {t['c_control_bg']};
+        border: 1px solid {t['c_border']};
+        border-radius: 8px;
+    }}
+    #CustomUploadRow {{
+        background: {t['c_control_bg']};
+        border: 1px solid {t['c_border']};
+        border-radius: 7px;
+    }}
+    QWidget[role="divider"] {{
+        background: {t['c_sidebar_border']};
+        border: none;
+    }}
+    QFrame[role="hsep"] {{
+        background: {t['c_sidebar_border']};
+        border: none;
+        margin: 3px 0;
+    }}
+    #PagesStack, #ScrollArea, #ScrollViewport, #ScrollInner, QWidget[role="transparentWrap"] {{
+        background: transparent;
+        border: none;
+    }}
+    QScrollBar:vertical {{
+        background: transparent;
+        width: 6px;
+        margin: 4px 2px 4px 0;
+    }}
+    QScrollBar::handle:vertical {{
+        background: {t['scroll_bg']};
+        border-radius: 3px;
+        min-height: 28px;
+    }}
+    QScrollBar::handle:vertical:hover {{
+        background: {t['scroll_hover']};
+    }}
+    QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {{
+        height: 0;
+    }}
+    QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical {{
+        background: transparent;
+    }}
+
+    /* Typography roles */
+    QLabel {{
+        background: transparent;
+        border: none;
+        font-family: 'Segoe UI', sans-serif;
+    }}
+    QLabel[role="text"] {{ color: {t['c_text']}; font-weight: 400; }}
+    QLabel[role="textSec"] {{ color: {t['c_text_sec']}; font-weight: 400; }}
+    QLabel[role="textMuted"] {{ color: {t['c_text_muted']}; font-weight: 400; }}
+    QLabel[role="pageTitle"] {{ color: {t['c_text']}; font-weight: 600; }}
+    QLabel[role="sectionLabel"] {{ color: {t['c_text_sec']}; font-size: 12px; font-weight: 600; padding-top: 2px; }}
+    QLabel[role="tileTitle"] {{ color: {t['c_text_sec']}; font-size: 10px; font-weight: 500; }}
+    QLabel[role="tileTitleSel"] {{ color: {t['c_tile_sel_txt']}; font-size: 10px; font-weight: 600; }}
+    QLabel[role="soundTitle"] {{ color: {t['c_text_sec']}; font-size: 11px; font-weight: 500; }}
+    QLabel[role="soundTitleHover"] {{ color: {t['c_text']}; font-size: 11px; font-weight: 500; }}
+    QLabel[role="soundTitleSel"] {{ color: {t['c_accent']}; font-size: 11px; font-weight: 600; }}
+    QLabel[role="statusSuccess"] {{ color: {t['c_success']}; font-weight: 600; }}
+    QLabel[role="statusDanger"] {{ color: {t['c_danger']}; font-weight: 600; }}
+    QLabel[role="statusAccent"] {{ color: {t['c_accent_light']}; font-weight: 600; }}
+    QLabel[bold="true"] {{ font-weight: 600; }}
+    QLabel[sz="10"] {{ font-size: 10px; }}
+    QLabel[sz="11"] {{ font-size: 11px; }}
+    QLabel[sz="12"] {{ font-size: 12px; }}
+    QLabel[sz="13"] {{ font-size: 13px; }}
+    QLabel[sz="18"] {{ font-size: 18px; }}
+    QLabel[sz="20"] {{ font-size: 20px; }}
+
+    /* Action buttons */
+    QPushButton[role="btnDefault"] {{
+        background: {t['c_control_bg']};
+        color: {t['c_text']};
+        border: 1px solid {t['c_border']};
+        border-radius: 7px;
+        padding: 7px 14px;
+        font-weight: 500;
+        font-size: 12px;
+        font-family: 'Segoe UI', sans-serif;
+    }}
+    QPushButton[role="btnDefault"]:hover {{
+        background: {t['c_surface_hover']};
+        color: {t['c_text']};
+        border-color: {t['c_border_light']};
+    }}
+    QPushButton[role="btnDefault"][copied="true"] {{
+        background: {t['success_bg']};
+        color: {t['success_fg']};
+        border: 1px solid {t['c_success']};
+        font-weight: 600;
+    }}
+    QPushButton[role="btnPrimary"] {{
+        background: {t['c_accent']};
+        color: {t['c_accent_fg']};
+        border: 1px solid {t['c_accent_light']};
+        border-radius: 7px;
+        padding: 7px 14px;
+        font-weight: 600;
+        font-size: 12px;
+        font-family: 'Segoe UI', sans-serif;
+    }}
+    QPushButton[role="btnPrimary"]:hover {{
+        background: {t['c_accent_hover']};
+        border-color: {t['c_accent_light']};
+    }}
+    QPushButton[role="btnPrimary"]:disabled {{
+        background: {t['c_border']};
+        color: {t['c_text_muted']};
+        border-color: {t['c_border']};
+    }}
+    QPushButton[role="btnOutline"] {{
+        background: transparent;
+        color: {t['c_text']};
+        border: 1px solid {t['c_border']};
+        border-radius: 7px;
+        padding: 7px 14px;
+        font-weight: 500;
+        font-size: 12px;
+        font-family: 'Segoe UI', sans-serif;
+    }}
+    QPushButton[role="btnOutline"]:hover {{
+        background: {t['c_surface_hover']};
+        color: {t['c_text']};
+        border-color: {t['c_border_light']};
+    }}
+    QPushButton[role="btnDanger"] {{
+        background: {t['danger_bg']};
+        color: {t['danger_fg']};
+        border: 1px solid {t['danger_bd']};
+        border-radius: 7px;
+        padding: 7px 14px;
+        font-weight: 600;
+        font-size: 12px;
+        font-family: 'Segoe UI', sans-serif;
+    }}
+    QPushButton[role="btnDanger"]:hover {{
+        background: {t['danger_hbg']};
+        color: {t['danger_hfg']};
+        border-color: #EF4444;
+    }}
+    QPushButton[role="btnUse"] {{
+        background: {t['use_btn_bg']};
+        color: {t['use_btn_fg']};
+        border: 1px solid {t['c_accent_light']};
+        border-radius: 5px;
+        padding: 3px 10px;
+        font-size: 11px;
+        font-weight: 600;
+        font-family: 'Segoe UI', sans-serif;
+    }}
+    QPushButton[role="btnUse"]:hover {{
+        background: {t['c_accent']};
+        color: {t['c_accent_fg']};
+    }}
+    QPushButton[role="btnRemove"] {{
+        background: transparent;
+        color: {t['c_danger']};
+        border: none;
+        padding: 3px 6px;
+        font-size: 11px;
+        font-weight: 500;
+        font-family: 'Segoe UI', sans-serif;
+    }}
+    QPushButton[role="btnRemove"]:hover {{
+        color: {t['c_text']};
+    }}
+    QPushButton[role="previewCtrl"] {{
+        background: {t['c_control_bg']};
+        color: {t['c_text']};
+        border: 1px solid {t['c_border']};
+        border-radius: 7px;
+        padding: 3px 8px;
+        font-size: 11px;
+        font-weight: 500;
+        font-family: 'Segoe UI', sans-serif;
+    }}
+    QPushButton[role="previewCtrl"]:hover {{
+        background: {t['c_surface_hover']};
+        color: {t['c_text']};
+        border-color: {t['c_border_light']};
+    }}
+    QPushButton[role="previewCtrl"]:checked {{
+        background: {t['c_checked_bg']};
+        color: {t['c_checked_fg']};
+        border-color: {t['c_checked_bd']};
+        font-weight: 600;
+    }}
+
+    /* Hotkey button */
+    HotkeyButton {{
+        background: {t['c_control_bg']};
+        color: {t['c_text']};
+        border: 1px solid {t['c_border']};
+        border-radius: 6px;
+        font-size: 11px;
+        font-weight: 600;
+        padding: 3px 10px;
+        font-family: 'Segoe UI', sans-serif;
+    }}
+    HotkeyButton:hover {{
+        border-color: {t['c_border_light']};
+        background: {t['c_surface_hover']};
+        color: {t['c_text']};
+    }}
+    HotkeyButton[recording="true"] {{
+        background: #1E3A8A;
+        color: #F8FAFC;
+        border: 1px solid #60A5FA;
+    }}
+
+    /* SegmentedControl inner pills */
+    SegmentedControl QPushButton {{
+        background: transparent;
+        color: {t['seg_btn_fg']};
+        border: none;
+        border-radius: 6px;
+        padding: 3px 11px;
+        font-size: 11px;
+        font-weight: 500;
+        font-family: 'Segoe UI', sans-serif;
+    }}
+    SegmentedControl QPushButton:hover {{
+        color: {t['seg_btn_hover_fg']};
+        background: {t['seg_btn_hover_bg']};
+    }}
+    SegmentedControl QPushButton:checked {{
+        background: {t['c_accent']};
+        color: {t['c_accent_fg']};
+        font-weight: 600;
+    }}
+
+    /* Inputs & Comboboxes */
+    QLineEdit {{
+        background: {t['c_input_bg']};
+        color: {t['c_text']};
+        border: 1px solid {t['c_border']};
+        border-radius: 8px;
+        padding: 3px 10px;
+        font-size: 12px;
+        font-family: 'Segoe UI', sans-serif;
+    }}
+    QLineEdit:focus {{
+        border: 1px solid {t['c_accent_light']};
+        background: {t['c_input_focus_bg']};
+    }}
+    QComboBox {{
+        background: {t['c_control_bg']};
+        color: {t['c_text']};
+        border: 1px solid {t['c_border']};
+        border-radius: 7px;
+        padding: 4px 10px;
+        font-size: 12px;
+        font-family: 'Segoe UI', sans-serif;
+    }}
+    QComboBox:hover {{
+        border-color: {t['c_border_light']};
+    }}
+    QComboBox::drop-down {{
+        border: none;
+        width: 20px;
+    }}
+    QComboBox QAbstractItemView {{
+        background: {t['c_combo_popup_bg']};
+        color: {t['c_text']};
+        border: 1px solid {t['c_border']};
+        selection-background-color: {t['c_accent']};
+        selection-color: {t['c_accent_fg']};
+    }}
+
+    /* Dialogs */
+    QMessageBox {{
+        background: {t['c_combo_popup_bg']};
+        color: {t['c_text']};
+    }}
+    QMessageBox QLabel {{
+        color: {t['c_text']};
+        font-size: 12px;
+    }}
+    QMessageBox QPushButton {{
+        background: {t['c_control_bg']};
+        color: {t['c_text']};
+        border: 1px solid {t['c_border']};
+        border-radius: 6px;
+        padding: 5px 14px;
+        font-size: 12px;
+        min-width: 68px;
+    }}
+    QMessageBox QPushButton:hover {{
+        background: {t['c_surface_hover']};
+        border-color: {t['c_border_light']};
+    }}
+    """
 
 
 SIZE_LABELS = ["XS", "S", "M", "L", "XL"]
@@ -328,29 +773,25 @@ def build_hand_thumb_pixmap(
 
 
 # ---------------------------------------------------------------------------
-# Scroll & Typography Helpers
+# Layout & Typography Builders (Zero Inline Stylesheets)
 # ---------------------------------------------------------------------------
-def _scroll_qss() -> str:
-    handle_bg = "#475569" if CURRENT_THEME["mode"] == "dark" else "#CBD5E1"
-    handle_hover = "#64748B" if CURRENT_THEME["mode"] == "dark" else "#94A3B8"
-    return (
-        "QScrollArea { background: transparent; border: none; }\n"
-        "QScrollBar:vertical { background: transparent; width: 6px; margin: 4px 2px 4px 0; }\n"
-        f"QScrollBar::handle:vertical {{ background: {handle_bg}; border-radius: 3px; min-height: 28px; }}\n"
-        f"QScrollBar::handle:vertical:hover {{ background: {handle_hover}; }}\n"
-        "QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical { height: 0; }\n"
-        "QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical { background: transparent; }"
-    )
-
-
 def _page_scroll() -> Tuple[QScrollArea, QWidget, QVBoxLayout]:
     scroll = QScrollArea()
+    scroll.setObjectName("ScrollArea")
     scroll.setWidgetResizable(True)
     scroll.setFrameShape(QFrame.Shape.NoFrame)
     scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
-    scroll.setStyleSheet(_scroll_qss())
+    scroll.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground, True)
+
+    vp = scroll.viewport()
+    vp.setObjectName("ScrollViewport")
+    vp.setAttribute(Qt.WidgetAttribute.WA_StyledBackground, True)
+    vp.setAutoFillBackground(False)
+    vp.setStyleSheet("#ScrollViewport { background: transparent; }")
+
     inner = QWidget()
-    inner.setStyleSheet("background: transparent;")
+    inner.setObjectName("ScrollInner")
+    inner.setAttribute(Qt.WidgetAttribute.WA_StyledBackground, True)
     vbox = QVBoxLayout(inner)
     vbox.setContentsMargins(24, 20, 22, 28)
     vbox.setSpacing(14)
@@ -361,32 +802,20 @@ def _page_scroll() -> Tuple[QScrollArea, QWidget, QVBoxLayout]:
 def _label(
     text: str,
     size: int = 12,
-    color: Optional[str] = None,
+    role: str = "text",
     bold: bool = False,
     muted: bool = False,
 ) -> QLabel:
     lbl = QLabel(text)
-    if muted:
-        col = CURRENT_THEME["c_text_muted"]
-    elif color is not None:
-        col = color
-    else:
-        col = CURRENT_THEME["c_text"]
-    weight = "600" if bold else "400"
-    lbl.setStyleSheet(
-        f"color: {col}; font-size: {size}px; font-weight: {weight}; "
-        "background: transparent; border: none; font-family: 'Segoe UI', sans-serif;"
-    )
+    lbl.setProperty("role", "textMuted" if muted else role)
+    lbl.setProperty("sz", str(size))
+    lbl.setProperty("bold", "true" if bold else "false")
     return lbl
 
 
 def _section_label(text: str) -> QLabel:
     lbl = QLabel(text)
-    lbl.setStyleSheet(
-        f"color: {CURRENT_THEME['c_text_sec']}; font-size: 12px; font-weight: 600; "
-        "background: transparent; border: none; padding-top: 2px; "
-        "font-family: 'Segoe UI', sans-serif;"
-    )
+    lbl.setProperty("role", "sectionLabel")
     return lbl
 
 
@@ -394,105 +823,42 @@ def _add_hsep(layout: QVBoxLayout):
     sep = QFrame()
     sep.setFrameShape(QFrame.Shape.HLine)
     sep.setFixedHeight(1)
-    sep.setStyleSheet(f"background: {CURRENT_THEME['c_sidebar_border']}; border: none; margin: 3px 0;")
+    sep.setProperty("role", "hsep")
+    sep.setAttribute(Qt.WidgetAttribute.WA_StyledBackground, True)
     layout.addWidget(sep)
 
 
+def _transparent_wrap() -> QWidget:
+    w = QWidget()
+    w.setProperty("role", "transparentWrap")
+    w.setAttribute(Qt.WidgetAttribute.WA_StyledBackground, True)
+    return w
+
+
 # ===========================================================================
-# Clean Custom Controls
+# Custom Controls
 # ===========================================================================
-# ===========================================================================
-# Explicit Two-Button Segmented Theme Switcher: [ Dark | Light ]
-# ===========================================================================
-class ThemeSegmentedSwitcher(QWidget):
-    """Clean, explicit two-button segmented switcher in titlebar."""
-
-    themeChanged = pyqtSignal(str)
-
-    def __init__(self, current_mode: str = "dark", parent=None):
-        super().__init__(parent)
-        self._mode = current_mode
-        self.setFixedHeight(26)
-        self.setFixedWidth(116)
-
-        layout = QHBoxLayout(self)
-        layout.setContentsMargins(2, 2, 2, 2)
-        layout.setSpacing(2)
-
-        self._btn_dark = QPushButton("Dark")
-        self._btn_dark.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
-        self._btn_dark.setFixedHeight(22)
-        self._btn_dark.clicked.connect(lambda: self.set_mode("dark"))
-        layout.addWidget(self._btn_dark)
-
-        self._btn_light = QPushButton("Light")
-        self._btn_light.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
-        self._btn_light.setFixedHeight(22)
-        self._btn_light.clicked.connect(lambda: self.set_mode("light"))
-        layout.addWidget(self._btn_light)
-
-        self.apply_theme(current_mode)
-
-    def set_mode(self, mode: str):
-        if self._mode != mode:
-            self._mode = mode
-            self.apply_theme(mode)
-            self.themeChanged.emit(mode)
-
-    def apply_theme(self, mode: str):
-        self._mode = mode
-        is_dark = mode == "dark"
-
-        if is_dark:
-            self.setStyleSheet(
-                "ThemeSegmentedSwitcher { background: rgba(22, 24, 29, 210); "
-                "border: 1px solid #2F333D; border-radius: 6px; }"
-            )
-            self._btn_dark.setStyleSheet(
-                "QPushButton { background: #2F333D; color: #F3F4F6; "
-                "border: none; border-radius: 4px; font-size: 11px; font-weight: 600; padding: 2px 8px; font-family: 'Segoe UI'; }"
-            )
-            self._btn_light.setStyleSheet(
-                "QPushButton { background: transparent; color: #9CA3AF; "
-                "border: none; border-radius: 4px; font-size: 11px; font-weight: 500; padding: 2px 8px; font-family: 'Segoe UI'; }"
-                "QPushButton:hover { color: #F3F4F6; background: rgba(255, 255, 255, 12); }"
-            )
-        else:
-            self.setStyleSheet(
-                "ThemeSegmentedSwitcher { background: rgba(214, 219, 226, 210); "
-                "border: 1px solid #C4C9D2; border-radius: 6px; }"
-            )
-            self._btn_light.setStyleSheet(
-                "QPushButton { background: #CBD5E1; color: #181A1F; "
-                "border: none; border-radius: 4px; font-size: 11px; font-weight: 600; padding: 2px 8px; font-family: 'Segoe UI'; }"
-            )
-            self._btn_dark.setStyleSheet(
-                "QPushButton { background: transparent; color: #4B5563; "
-                "border: none; border-radius: 4px; font-size: 11px; font-weight: 500; padding: 2px 8px; font-family: 'Segoe UI'; }"
-                "QPushButton:hover { color: #181A1F; background: rgba(0, 0, 0, 15); }"
-            )
-
-
 class NavRailButton(QWidget):
-    """Quiet single-line sidebar navigation pill (clean linear/macOS style)."""
+    """Sidebar navigation item with colorful 24x24px rounded-square vector badge."""
 
     clicked = pyqtSignal()
 
-    def __init__(self, icon_key: str, label: str, parent: Optional[QWidget] = None):
+    def __init__(
+        self,
+        icon_key: str,
+        label: str,
+        badge_color: str,
+        parent: Optional[QWidget] = None,
+    ):
         super().__init__(parent)
         self.icon_key = icon_key
         self.label = label
+        self.badge_color = badge_color
         self._checked = False
         self._hovered = False
-        self.setFixedHeight(36)
+        self.setFixedHeight(40)
         self.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
-        self.update_theme()
-
-    def update_theme(self):
-        self._icon_active = make_svg_icon(self.icon_key, CURRENT_THEME["c_accent_light"], 15)
-        self._icon_hover = make_svg_icon(self.icon_key, CURRENT_THEME["c_text"], 15)
-        self._icon_idle = make_svg_icon(self.icon_key, CURRENT_THEME["c_text_muted"], 15)
-        self.update()
+        self._badge_pm = make_sidebar_badge_pixmap(icon_key, badge_color, size=24, radius=6.0)
 
     def setChecked(self, checked: bool):
         if self._checked != checked:
@@ -517,30 +883,26 @@ class NavRailButton(QWidget):
     def paintEvent(self, event):
         p = QPainter(self)
         p.setRenderHint(QPainter.RenderHint.Antialiasing, True)
+        p.setRenderHint(QPainter.RenderHint.SmoothPixmapTransform, True)
 
-        rect = QRectF(10, 1, self.width() - 20, self.height() - 2)
+        rect = QRectF(10, 2, self.width() - 20, self.height() - 4)
         pill = QPainterPath()
-        pill.addRoundedRect(rect, 8.0, 8.0)
+        pill.addRoundedRect(rect, 9.0, 9.0)
 
         if self._checked:
             p.fillPath(pill, CURRENT_THEME["nav_active_bg"])
             p.setPen(QPen(CURRENT_THEME["nav_active_border"], 1.0))
             p.drawPath(pill)
-            # Left accent indicator line
             bar_path = QPainterPath()
-            bar_path.addRoundedRect(QRectF(12, 9, 3, self.height() - 18), 1.5, 1.5)
+            bar_path.addRoundedRect(QRectF(12, 10, 3, self.height() - 20), 1.5, 1.5)
             p.fillPath(bar_path, QColor(CURRENT_THEME["c_accent"]))
         elif self._hovered:
             p.fillPath(pill, CURRENT_THEME["nav_hover_bg"])
             p.setPen(QPen(CURRENT_THEME["nav_hover_border"], 1.0))
             p.drawPath(pill)
 
-        icon = (
-            self._icon_active
-            if self._checked
-            else (self._icon_hover if self._hovered else self._icon_idle)
-        )
-        icon.paint(p, QRect(22, int((self.height() - 15) * 0.5), 15, 15))
+        badge_y = int((self.height() - 24) * 0.5)
+        p.drawPixmap(QRect(20, badge_y, 24, 24), self._badge_pm)
 
         txt_col = (
             QColor(CURRENT_THEME["c_accent"])
@@ -551,7 +913,7 @@ class NavRailButton(QWidget):
         p.setFont(QFont("Segoe UI", 9, weight))
         p.setPen(txt_col)
         p.drawText(
-            QRectF(47, 0, self.width() - 58, self.height()),
+            QRectF(53, 0, self.width() - 64, self.height()),
             Qt.AlignmentFlag.AlignVCenter,
             self.label,
         )
@@ -559,7 +921,7 @@ class NavRailButton(QWidget):
 
 
 class SettingsGroup(QWidget):
-    """Refined Dark Charcoal & Light Gray translucent card with glassmorphic rim."""
+    """Translucent card container with rounded border rendered dynamically from theme."""
 
     def __init__(self, body_layout, parent: Optional[QWidget] = None):
         super().__init__(parent)
@@ -568,8 +930,7 @@ class SettingsGroup(QWidget):
 
         outer = QVBoxLayout(self)
         outer.setContentsMargins(0, 0, 0, 0)
-        body = QWidget()
-        body.setStyleSheet("background: transparent;")
+        body = _transparent_wrap()
         body_layout.setContentsMargins(16, 14, 16, 14)
         body.setLayout(body_layout)
         outer.addWidget(body)
@@ -589,22 +950,17 @@ class SettingsGroup(QWidget):
         path = QPainterPath()
         path.addRoundedRect(rect, 10.0, 10.0)
 
-        card_fill = (
-            CURRENT_THEME["card_bg"] if not self._hovered else CURRENT_THEME["card_bg_hover"]
-        )
+        card_fill = CURRENT_THEME["card_bg_hover"] if self._hovered else CURRENT_THEME["card_bg"]
         p.fillPath(path, card_fill)
 
-        border_pen = QPen(
-            CURRENT_THEME["card_border"] if not self._hovered else CURRENT_THEME["card_border_hover"],
-            1.2
-        )
-        p.setPen(border_pen)
+        border_col = CURRENT_THEME["card_border_hover"] if self._hovered else CURRENT_THEME["card_border"]
+        p.setPen(QPen(border_col, 1.1))
         p.drawPath(path)
         p.end()
 
 
 class CleanToggle(QWidget):
-    """Crisp 38 x 22 px sliding switch (flat solid accent, zero neon halo)."""
+    """Crisp 38 x 22 px animated sliding switch."""
 
     toggled = pyqtSignal(bool)
 
@@ -653,17 +1009,20 @@ class CleanToggle(QWidget):
 
         track_r = QRectF(1.0, 1.5, 36.0, 19.0)
         p.setPen(Qt.PenStyle.NoPen)
-        p.setBrush(QColor(C_ACCENT) if self._checked else QColor(C_TRACK_OFF))
+        p.setBrush(QColor(CURRENT_THEME["c_accent"]) if self._checked else QColor(CURRENT_THEME["c_track_off"]))
         p.drawRoundedRect(track_r, 9.5, 9.5)
 
-        knob_col = QColor("#FFFFFF") if self._checked else (QColor("#F3F4F6") if CURRENT_THEME["mode"] == "dark" else QColor("#C4C9D2"))
+        if self._checked:
+            knob_col = QColor("#F8FAFC")
+        else:
+            knob_col = QColor("#F3F4F6") if CURRENT_THEME["mode"] == "dark" else QColor("#E6E8EC")
         p.setBrush(knob_col)
         p.drawEllipse(QPointF(self._knob_x, 11.0), 7.0, 7.0)
         p.end()
 
 
 class CleanSlider(QWidget):
-    """Refined 4 px track slider with solid Cobalt fill and crisp handle."""
+    """Refined 4 px track slider with accent fill and crisp handle."""
 
     valueChanged = pyqtSignal(int)
 
@@ -742,15 +1101,14 @@ class CleanSlider(QWidget):
         cy = self.height() * 0.5
 
         p.setPen(Qt.PenStyle.NoPen)
-        p.setBrush(QColor(C_TRACK_OFF))
+        p.setBrush(QColor(CURRENT_THEME["c_track_off"]))
         p.drawRoundedRect(t, 2.0, 2.0)
 
         if tx > t.left():
-            p.setBrush(QColor(C_ACCENT))
+            p.setBrush(QColor(CURRENT_THEME["c_accent"]))
             p.drawRoundedRect(QRectF(t.left(), t.top(), tx - t.left(), t.height()), 2.0, 2.0)
 
-        # Subtle soft drop shadow under thumb
-        p.setBrush(QColor(0, 0, 0, 80))
+        p.setBrush(QColor(0, 0, 0, 70))
         p.drawEllipse(QPointF(tx, cy + 1.0), 7.5, 7.5)
 
         r = 7.0 if (self._dragging or self._hovered) else 6.2
@@ -762,7 +1120,7 @@ class CleanSlider(QWidget):
 
 
 class SegmentedControl(QWidget):
-    """Understated segmented pill selector."""
+    """Segmented pill selector styled via root stylesheet."""
 
     changed = pyqtSignal(object)
 
@@ -781,22 +1139,11 @@ class SegmentedControl(QWidget):
         hl.setContentsMargins(3, 3, 3, 3)
         hl.setSpacing(2)
 
-        is_dark = CURRENT_THEME["mode"] == "dark"
-        btn_hover = "#2E3547" if is_dark else "#CBD5E1"
-        btn_color = "#CBD5E1" if is_dark else "#4B5563"
-        btn_hover_color = "#FFFFFF" if is_dark else "#181A1F"
         for label, val in items:
             btn = QPushButton(label)
             btn.setCheckable(True)
             btn.setChecked(val == self._current)
             btn.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
-            btn.setStyleSheet(
-                f"QPushButton {{ background: transparent; color: {btn_color}; border: none; "
-                "border-radius: 6px; padding: 3px 11px; font-size: 11px; font-weight: 500; "
-                "font-family: 'Segoe UI', sans-serif; }\n"
-                f"QPushButton:hover {{ color: {btn_hover_color}; background: {btn_hover}; }}\n"
-                f"QPushButton:checked {{ background: {CURRENT_THEME['c_accent']}; color: #FFFFFF; font-weight: 600; }}"
-            )
             btn.clicked.connect(lambda _c, v=val: self._select(v))
             self._buttons.append((btn, val))
             hl.addWidget(btn)
@@ -816,8 +1163,7 @@ class SegmentedControl(QWidget):
         rect = QRectF(0.5, 0.5, self.width() - 1.0, self.height() - 1.0)
         path = QPainterPath()
         path.addRoundedRect(rect, 8.0, 8.0)
-        ctrl_col = CURRENT_THEME.get("ctrl_bg", QColor(22, 24, 29, 215))
-        p.fillPath(path, ctrl_col)
+        p.fillPath(path, CURRENT_THEME["ctrl_bg"])
         p.setPen(QPen(QColor(CURRENT_THEME["c_border"]), 1.0))
         p.drawPath(path)
         p.end()
@@ -863,7 +1209,7 @@ class InkSwatchButton(QWidget):
         is_dark = CURRENT_THEME["mode"] == "dark"
 
         if self._checked:
-            sel_ring = QColor("#FFFFFF") if is_dark else QColor("#181A1F")
+            sel_ring = QColor("#F3F4F6") if is_dark else QColor("#181A1F")
             p.setPen(QPen(sel_ring, 2.0))
             p.setBrush(Qt.BrushStyle.NoBrush)
             p.drawEllipse(c, 14.0, 14.0)
@@ -878,8 +1224,13 @@ class InkSwatchButton(QWidget):
         if self.key == "rainbow":
             cg = QConicalGradient(c, 0)
             for pos, col in [
-                (0.0, "#EF4444"), (0.17, "#F59E0B"), (0.33, "#22C55E"),
-                (0.50, "#06B6D4"), (0.67, "#3B82F6"), (0.83, "#A855F7"), (1.0, "#EF4444")
+                (0.0, "#EF4444"),
+                (0.17, "#F59E0B"),
+                (0.33, "#22C55E"),
+                (0.50, "#06B6D4"),
+                (0.67, "#3B82F6"),
+                (0.83, "#A855F7"),
+                (1.0, "#EF4444"),
             ]:
                 cg.setColorAt(pos, QColor(col))
             p.setBrush(QBrush(cg))
@@ -894,14 +1245,14 @@ class InkSwatchButton(QWidget):
         p.drawEllipse(c, 10.5, 10.5)
 
         if self.key == "match":
-            p.setPen(QColor("#FFFFFF"))
+            p.setPen(QColor("#F8FAFC"))
             p.setFont(QFont("Segoe UI", 7, QFont.Weight.Bold))
             p.drawText(self.rect(), Qt.AlignmentFlag.AlignCenter, "A")
         p.end()
 
 
 class PointerThumb(QWidget):
-    """Clean 88 x 102 pointer tile displaying cropped 3D hand or vector art."""
+    """88 x 102 pointer tile displaying cropped 3D hand or vector art."""
 
     selected_signal = pyqtSignal(str)
 
@@ -930,31 +1281,37 @@ class PointerThumb(QWidget):
         self._img_label = QLabel()
         self._img_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self._img_label.setFixedSize(76, 62)
-        self._img_label.setStyleSheet("background: transparent;")
         layout.addWidget(self._img_label, 0, Qt.AlignmentFlag.AlignHCenter)
 
         self._pixmap = build_hand_thumb_pixmap(key, assets_dir, hand_assets, 76, 62)
-        if self._pixmap and not self._pixmap.isNull():
-            self._img_label.setPixmap(self._pixmap)
-        else:
-            self._img_label.setPixmap(make_svg_icon("hand", C_ACCENT_LIGHT, 28).pixmap(QSize(28, 28)))
+        self._apply_pixmap()
 
         self._name_lbl = QLabel(name)
         self._name_lbl.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self._name_lbl.setWordWrap(True)
-        self._name_lbl.setStyleSheet(
-            f"font-size: 10px; font-weight: 500; color: {C_TEXT_SEC}; "
-            "background: transparent; font-family: 'Segoe UI', sans-serif;"
-        )
+        self._name_lbl.setProperty("role", "tileTitle")
         layout.addWidget(self._name_lbl)
+
+    def _apply_pixmap(self):
+        if self._pixmap and not self._pixmap.isNull():
+            self._img_label.setPixmap(self._pixmap)
+        else:
+            self._img_label.setPixmap(
+                make_svg_icon("hand", CURRENT_THEME["c_accent_light"], 28).pixmap(QSize(28, 28))
+            )
+
+    def update_theme(self):
+        if self._pixmap is None or self._pixmap.isNull():
+            self._apply_pixmap()
+        self.update()
 
     def setSelected(self, state: bool):
         self._selected = state
-        self._name_lbl.setStyleSheet(
-            f"font-size: 10px; font-weight: {'600' if state else '500'}; "
-            f"color: {'#FFFFFF' if state else C_TEXT_SEC}; "
-            "background: transparent; font-family: 'Segoe UI', sans-serif;"
-        )
+        self._name_lbl.setProperty("role", "tileTitleSel" if state else "tileTitle")
+        st = self._name_lbl.style()
+        if st:
+            st.unpolish(self._name_lbl)
+            st.polish(self._name_lbl)
         self.update()
 
     def enterEvent(self, event):
@@ -1009,39 +1366,44 @@ class SoundTile(QWidget):
         self._icon_name = "sound_off" if key == "off" else "sound_on"
         self._icon_lbl = QLabel()
         self._icon_lbl.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self._icon_lbl.setStyleSheet("background: transparent;")
         layout.addWidget(self._icon_lbl, 0, Qt.AlignmentFlag.AlignHCenter)
 
         self._name_lbl = QLabel(label)
         self._name_lbl.setAlignment(Qt.AlignmentFlag.AlignCenter)
         layout.addWidget(self._name_lbl)
-        self._refresh_visuals()
+        self.update_theme()
 
-    def _refresh_visuals(self):
-        icon_col = CURRENT_THEME["c_accent_light"] if self._selected else (CURRENT_THEME["c_text"] if self._hovered else CURRENT_THEME["c_text_muted"])
-        self._icon_lbl.setPixmap(make_svg_icon(self._icon_name, icon_col, 19).pixmap(QSize(19, 19)))
-        txt_col = CURRENT_THEME["c_accent"] if self._selected else (CURRENT_THEME["c_text"] if self._hovered else CURRENT_THEME["c_text_sec"])
-        weight = "600" if self._selected else "500"
-        self._name_lbl.setStyleSheet(
-            f"font-size: 11px; font-weight: {weight}; color: {txt_col}; "
-            "background: transparent; font-family: 'Segoe UI', sans-serif;"
+    def update_theme(self):
+        icon_col = (
+            CURRENT_THEME["c_accent_light"]
+            if self._selected
+            else (CURRENT_THEME["c_text"] if self._hovered else CURRENT_THEME["c_text_muted"])
         )
+        self._icon_lbl.setPixmap(make_svg_icon(self._icon_name, icon_col, 19).pixmap(QSize(19, 19)))
+        role = (
+            "soundTitleSel"
+            if self._selected
+            else ("soundTitleHover" if self._hovered else "soundTitle")
+        )
+        self._name_lbl.setProperty("role", role)
+        st = self._name_lbl.style()
+        if st:
+            st.unpolish(self._name_lbl)
+            st.polish(self._name_lbl)
+        self.update()
 
     def setSelected(self, state: bool):
         if self._selected != state:
             self._selected = state
-            self._refresh_visuals()
-            self.update()
+            self.update_theme()
 
     def enterEvent(self, event):
         self._hovered = True
-        self._refresh_visuals()
-        self.update()
+        self.update_theme()
 
     def leaveEvent(self, event):
         self._hovered = False
-        self._refresh_visuals()
-        self.update()
+        self.update_theme()
 
     def mousePressEvent(self, event):
         if event.button() == Qt.MouseButton.LeftButton:
@@ -1068,7 +1430,7 @@ class SoundTile(QWidget):
 
 
 class HotkeyButton(QPushButton):
-    """Click-to-record hotkey pill button with crisp Light Gray border."""
+    """Click-to-record hotkey pill button styled via root stylesheet."""
 
     hotkeyChanged = pyqtSignal(str)
 
@@ -1079,54 +1441,40 @@ class HotkeyButton(QPushButton):
         self._update_text()
         self.clicked.connect(self._start_recording)
         self.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
-        self.setStyleSheet(self._base_qss())
+        self.setProperty("recording", "false")
         self.setFixedHeight(28)
         self.setMinimumWidth(124)
 
-    @staticmethod
-    def _base_qss() -> str:
-        is_dark = CURRENT_THEME["mode"] == "dark"
-        bg = "#22252C" if is_dark else "#DCE0E6"
-        fg = "#F3F4F6" if is_dark else "#181A1F"
-        bd = "#2F333D" if is_dark else "#C4C9D2"
-        hbg = "#2A2E37" if is_dark else "#E6E8EC"
-        hbd = "#454B59" if is_dark else "#A0A8B4"
-        hfg = "#F3F4F6" if is_dark else "#181A1F"
-        return (
-            f"QPushButton {{ background: {bg}; color: {fg}; "
-            f"  border: 1px solid {bd}; border-radius: 6px; "
-            "  font-size: 11px; font-weight: 600; padding: 3px 10px; font-family: 'Segoe UI'; }\n"
-            f"QPushButton:hover {{ border-color: {hbd}; background: {hbg}; color: {hfg}; }}"
-        )
-
-    @staticmethod
-    def _record_qss() -> str:
-        return (
-            "QPushButton { background: #1E3A8A; color: #FFFFFF; "
-            "  border: 1px solid #60A5FA; border-radius: 6px; "
-            "  font-size: 11px; font-weight: 600; padding: 3px 10px; font-family: 'Segoe UI'; }"
-        )
+    def _set_recording_state(self, recording: bool):
+        self._recording = recording
+        self.setProperty("recording", "true" if recording else "false")
+        st = self.style()
+        if st:
+            st.unpolish(self)
+            st.polish(self)
+        self.update()
 
     def _update_text(self):
         self.setText(self._current.upper() if self._current else "None")
 
     def _start_recording(self):
-        self._recording = True
+        self._set_recording_state(True)
         self.setText("Press keys...")
-        self.setStyleSheet(self._record_qss())
         self.grabKeyboard()
 
     def keyPressEvent(self, event: QKeyEvent):
         if not self._recording:
             return super().keyPressEvent(event)
         if event.key() == Qt.Key.Key_Escape:
-            self._recording = False
+            self._set_recording_state(False)
             self._update_text()
-            self.setStyleSheet(self._base_qss())
             self.releaseKeyboard()
             return
         if event.key() in (
-            Qt.Key.Key_Control, Qt.Key.Key_Alt, Qt.Key.Key_Shift, Qt.Key.Key_Meta
+            Qt.Key.Key_Control,
+            Qt.Key.Key_Alt,
+            Qt.Key.Key_Shift,
+            Qt.Key.Key_Meta,
         ):
             return
 
@@ -1142,15 +1490,14 @@ class HotkeyButton(QPushButton):
         if not key_name:
             return
         self._current = "+".join(mods + [key_name]) if mods else key_name
-        self._recording = False
+        self._set_recording_state(False)
         self._update_text()
-        self.setStyleSheet(self._base_qss())
         self.releaseKeyboard()
         self.hotkeyChanged.emit(self._current)
 
 
 # ===========================================================================
-# Live Interactive Preview Stage (Refined Graphite Studio Canvas)
+# Live Interactive Preview Stage
 # ===========================================================================
 class LivePreviewStage(QWidget):
     """Interactive dot-grid stage showing live hand kinematics, ink, bubbles & spotlight."""
@@ -1288,7 +1635,6 @@ class LivePreviewStage(QWidget):
         clip_path.addRoundedRect(outer_rect, 11.0, 11.0)
         p.setClipPath(clip_path)
 
-        # Neutral studio canvas + fine dot grid
         p.fillRect(self.rect(), CURRENT_THEME["stage_bg"])
         p.setPen(QPen(CURRENT_THEME["stage_dot"], 1.5))
         for gx in range(14, int(w), 18):
@@ -1426,24 +1772,23 @@ class LivePreviewStage(QWidget):
 
 
 # ===========================================================================
-# Helper row builders
+# Helper Row & Button Builders (Zero Inline Stylesheets)
 # ===========================================================================
 def _toggle_row(
     label: str,
     sublabel: str = "",
     checked: bool = False,
 ) -> Tuple[QWidget, CleanToggle]:
-    row = QWidget()
-    row.setStyleSheet("background: transparent;")
+    row = _transparent_wrap()
     hl = QHBoxLayout(row)
     hl.setContentsMargins(0, 4, 0, 4)
     hl.setSpacing(12)
 
     col = QVBoxLayout()
     col.setSpacing(2)
-    col.addWidget(_label(label, 12, C_TEXT, bold=True))
+    col.addWidget(_label(label, 12, "text", bold=True))
     if sublabel:
-        sub = _label(sublabel, 11, C_TEXT_MUTED)
+        sub = _label(sublabel, 11, muted=True)
         sub.setWordWrap(True)
         col.addWidget(sub)
     hl.addLayout(col, 1)
@@ -1460,8 +1805,7 @@ def _slider_row(
     hi: int = 100,
     val: int = 50,
 ) -> Tuple[QWidget, CleanSlider, QLabel]:
-    row = QWidget()
-    row.setStyleSheet("background: transparent;")
+    row = _transparent_wrap()
     vl = QVBoxLayout(row)
     vl.setContentsMargins(0, 2, 0, 2)
     vl.setSpacing(5)
@@ -1469,11 +1813,11 @@ def _slider_row(
     top = QHBoxLayout()
     top.setContentsMargins(0, 0, 0, 0)
     top.setSpacing(8)
-    top.addWidget(_label(label, 12, C_TEXT, bold=True))
+    top.addWidget(_label(label, 12, "text", bold=True))
     if sublabel:
-        top.addWidget(_label(sublabel, 11, C_TEXT_MUTED))
+        top.addWidget(_label(sublabel, 11, muted=True))
     top.addStretch()
-    val_lbl = _label(str(val), 12, color=C_TEXT_SEC, bold=True)
+    val_lbl = _label(str(val), 12, role="textSec", bold=True)
     top.addWidget(val_lbl)
     vl.addLayout(top)
 
@@ -1485,46 +1829,14 @@ def _slider_row(
 def _button(text: str, primary: bool = False, danger: bool = False, outline: bool = False) -> QPushButton:
     btn = QPushButton(text)
     btn.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
-    is_dark = CURRENT_THEME["mode"] == "dark"
     if danger:
-        bg = "#3B1E22" if is_dark else "#FEE2E2"
-        fg = "#FCA5A5" if is_dark else "#DC2626"
-        bd = "#7F1D1D" if is_dark else "#FCA5A5"
-        hbg = "#4C1D24" if is_dark else "#FECACA"
-        btn.setStyleSheet(
-            f"QPushButton {{ background: {bg}; color: {fg}; "
-            f"  border: 1px solid {bd}; border-radius: 7px; "
-            "  padding: 7px 14px; font-weight: 600; font-size: 12px; font-family: 'Segoe UI'; }\n"
-            f"QPushButton:hover {{ background: {hbg}; color: #FFFFFF; border-color: #EF4444; }}"
-        )
+        btn.setProperty("role", "btnDanger")
     elif primary:
-        btn.setStyleSheet(
-            f"QPushButton {{ background: {CURRENT_THEME['c_accent']}; color: #FFFFFF; border: 1px solid {CURRENT_THEME['c_accent_light']}; "
-            "  border-radius: 7px; padding: 7px 14px; font-weight: 600; "
-            "  font-size: 12px; font-family: 'Segoe UI'; }\n"
-            f"QPushButton:hover {{ background: {CURRENT_THEME['c_accent']}; border-color: #93C5FD; }}"
-        )
+        btn.setProperty("role", "btnPrimary")
     elif outline:
-        fg = CURRENT_THEME["c_text"]
-        bd = CURRENT_THEME["c_border"]
-        hbg = CURRENT_THEME["c_surface_hover"]
-        btn.setStyleSheet(
-            f"QPushButton {{ background: transparent; color: {fg}; "
-            f"  border: 1px solid {bd}; border-radius: 7px; "
-            "  padding: 7px 14px; font-weight: 500; font-size: 12px; font-family: 'Segoe UI'; }\n"
-            f"QPushButton:hover {{ background: {hbg}; color: {CURRENT_THEME['c_text']}; border-color: {CURRENT_THEME['c_border_light']}; }}"
-        )
+        btn.setProperty("role", "btnOutline")
     else:
-        bg = CURRENT_THEME["c_surface"]
-        fg = CURRENT_THEME["c_text"]
-        bd = CURRENT_THEME["c_border"]
-        hbg = CURRENT_THEME["c_surface_hover"]
-        btn.setStyleSheet(
-            f"QPushButton {{ background: {bg}; color: {fg}; "
-            f"  border: 1px solid {bd}; border-radius: 7px; "
-            "  padding: 7px 14px; font-weight: 500; font-size: 12px; font-family: 'Segoe UI'; }\n"
-            f"QPushButton:hover {{ background: {hbg}; color: {CURRENT_THEME['c_text']}; border-color: {CURRENT_THEME['c_border_light']}; }}"
-        )
+        btn.setProperty("role", "btnDefault")
     return btn
 
 
@@ -1532,10 +1844,10 @@ def _button(text: str, primary: bool = False, danger: bool = False, outline: boo
 # Main Window: SettingsWindow
 # ===========================================================================
 class SettingsWindow(QWidget):
-    """Clean dark-graphite Settings Window for TinyHand Windows."""
+    """Unified translucent dual-theme Settings Window for TinyHand Windows."""
 
-    WIN_W, WIN_H = 1000, 640
-    SIDEBAR_W = 192
+    WIN_W, WIN_H = 1008, 640
+    SIDEBAR_W = 200
     PREVIEW_DOCK_W = 308
 
     def __init__(
@@ -1549,6 +1861,7 @@ class SettingsWindow(QWidget):
         parent: Optional[QWidget] = None,
     ):
         super().__init__(parent)
+        self.setObjectName("SettingsRoot")
         self.config = config
         self.overlay = overlay
         self.hud = hud
@@ -1572,7 +1885,9 @@ class SettingsWindow(QWidget):
         self._pointer_search = ""
         self._last_update_info: Dict[str, object] = {}
         self._update_worker: Optional[UpdateCheckerThread] = None
-        self.theme_mode = self.config.get("theme_mode", "dark") if self.config else "dark"
+
+        saved_mode = self.config.get("theme_mode", "dark") if self.config else "dark"
+        self.theme_mode = "light" if saved_mode == "light" else "dark"
         set_active_theme(self.theme_mode)
 
         self.setFixedSize(self.WIN_W, self.WIN_H)
@@ -1583,49 +1898,54 @@ class SettingsWindow(QWidget):
         )
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground, True)
 
+        self._enable_windows_blur()
+        self._build_ui()
+        self.apply_theme(self.theme_mode, persist=False)
+        self._sync_preview_from_state()
+        self._center_on_screen()
+
+    def _enable_windows_blur(self):
+        """Enable native Windows DWM blur-behind inside the rounded window region."""
+        if sys.platform != "win32":
+            return
         try:
             import ctypes
             from ctypes import wintypes
+
             class DWM_BLURBEHIND(ctypes.Structure):
                 _fields_ = [
-                    ('dwFlags', wintypes.DWORD),
-                    ('fEnable', wintypes.BOOL),
-                    ('hRgnBlur', wintypes.HRGN),
-                    ('fTransitionOnMaximized', wintypes.BOOL)
+                    ("dwFlags", wintypes.DWORD),
+                    ("fEnable", wintypes.BOOL),
+                    ("hRgnBlur", wintypes.HRGN),
+                    ("fTransitionOnMaximized", wintypes.BOOL),
                 ]
+
+            hrgn = ctypes.windll.gdi32.CreateRoundRectRgn(
+                1, 1, self.WIN_W - 1, self.WIN_H - 1, 26, 26
+            )
             bb = DWM_BLURBEHIND()
-            bb.dwFlags = 0x00000001
+            bb.dwFlags = 0x00000001 | 0x00000002  # DWM_BB_ENABLE | DWM_BB_BLURREGION
             bb.fEnable = True
-            bb.hRgnBlur = None
+            bb.hRgnBlur = hrgn
             bb.fTransitionOnMaximized = False
             ctypes.windll.dwmapi.DwmEnableBlurBehindWindow(int(self.winId()), ctypes.byref(bb))
+            if hrgn:
+                ctypes.windll.gdi32.DeleteObject(hrgn)
         except Exception:
             pass
-
-        shadow = QGraphicsDropShadowEffect(self)
-        shadow.setBlurRadius(44)
-        shadow.setOffset(0, 10)
-        shadow.setColor(QColor(0, 0, 0, 195))
-        self.setGraphicsEffect(shadow)
-
-        self._build_ui()
-        self._sync_preview_from_state()
-        self._center_on_screen()
 
     def paintEvent(self, event):
         p = QPainter(self)
         p.setRenderHint(QPainter.RenderHint.Antialiasing, True)
-        outer = QRectF(1.0, 1.0, self.WIN_W - 2.0, self.WIN_H - 2.0)
+        outer = QRectF(0.75, 0.75, self.WIN_W - 1.5, self.WIN_H - 1.5)
         path = QPainterPath()
         path.addRoundedRect(outer, 13.0, 13.0)
 
-        # Dynamic Theme Acrylic Gradient (Translucent)
         grad = QLinearGradient(0, 0, self.WIN_W, self.WIN_H)
         grad.setColorAt(0.0, CURRENT_THEME["win_grad_start"])
         grad.setColorAt(1.0, CURRENT_THEME["win_grad_end"])
         p.fillPath(path, QBrush(grad))
 
-        # Crisp outer window hairline
         p.setPen(QPen(CURRENT_THEME["win_border"], 1.2))
         p.drawPath(path)
         p.end()
@@ -1640,6 +1960,60 @@ class SettingsWindow(QWidget):
             )
 
     # ------------------------------------------------------------------
+    # Centralized Theme Engine
+    # ------------------------------------------------------------------
+    def _toggle_theme(self):
+        next_mode = "light" if self.theme_mode == "dark" else "dark"
+        self.apply_theme(next_mode, persist=True)
+
+    def set_theme(self, mode: str):
+        """Compatibility wrapper forwarding directly to apply_theme(mode)."""
+        self.apply_theme(mode, persist=True)
+
+    def apply_theme(self, mode: str, persist: bool = True):
+        """Apply theme from a single root QSS stylesheet and re-polish every widget."""
+        mode = "light" if mode == "light" else "dark"
+        self.theme_mode = mode
+        if persist and self.config:
+            self.config.set("theme_mode", mode)
+            self.config.save()
+
+        theme = set_active_theme(mode)
+
+        # Single centralized stylesheet on root window
+        self.setStyleSheet(build_root_stylesheet(theme))
+
+        # Update top-right theme Sun/Moon icon button
+        if hasattr(self, "_btn_theme"):
+            icon_name = "sun" if mode == "dark" else "moon"
+            tip = "Switch to Light Mode" if mode == "dark" else "Switch to Dark Mode"
+            self._btn_theme.setIcon(make_svg_icon(icon_name, theme["c_text_sec"], 15))
+            self._btn_theme.setToolTip(tip)
+
+        # Update window control icons
+        if hasattr(self, "_btn_min"):
+            self._btn_min.setIcon(make_svg_icon("minimize", theme["c_text_muted"], 12))
+        if hasattr(self, "_btn_close"):
+            self._btn_close.setIcon(make_svg_icon("close", theme["c_text_muted"], 12))
+
+        # Update preview action icons
+        self._refresh_preview_icons()
+
+        # Update custom painted tiles & thumbnails
+        for thumb in self._pointer_thumbs:
+            thumb.update_theme()
+        for tile in self._sound_tiles:
+            tile.update_theme()
+
+        # Recursively unpolish/polish/update all widgets so zero patches remain stale
+        for widget in [self] + self.findChildren(QWidget):
+            st = widget.style()
+            if st is not None:
+                st.unpolish(widget)
+                st.polish(widget)
+            widget.update()
+
+    # ------------------------------------------------------------------
     # Shell Layout
     # ------------------------------------------------------------------
     def _build_ui(self):
@@ -1651,11 +2025,11 @@ class SettingsWindow(QWidget):
 
         self._hdiv = QWidget()
         self._hdiv.setFixedHeight(1)
-        self._hdiv.setStyleSheet(f"background: {CURRENT_THEME['c_sidebar_border']};")
+        self._hdiv.setProperty("role", "divider")
+        self._hdiv.setAttribute(Qt.WidgetAttribute.WA_StyledBackground, True)
         shell.addWidget(self._hdiv)
 
-        body = QWidget()
-        body.setStyleSheet("background: transparent;")
+        body = _transparent_wrap()
         self._body_hl = QHBoxLayout(body)
         self._body_hl.setContentsMargins(0, 0, 0, 0)
         self._body_hl.setSpacing(0)
@@ -1665,7 +2039,8 @@ class SettingsWindow(QWidget):
 
         self._vdiv1 = QWidget()
         self._vdiv1.setFixedWidth(1)
-        self._vdiv1.setStyleSheet(f"background: {CURRENT_THEME['c_sidebar_border']};")
+        self._vdiv1.setProperty("role", "divider")
+        self._vdiv1.setAttribute(Qt.WidgetAttribute.WA_StyledBackground, True)
         self._body_hl.addWidget(self._vdiv1)
 
         self._stack = self._build_pages()
@@ -1673,7 +2048,8 @@ class SettingsWindow(QWidget):
 
         self._preview_divider = QWidget()
         self._preview_divider.setFixedWidth(1)
-        self._preview_divider.setStyleSheet(f"background: {CURRENT_THEME['c_sidebar_border']};")
+        self._preview_divider.setProperty("role", "divider")
+        self._preview_divider.setAttribute(Qt.WidgetAttribute.WA_StyledBackground, True)
         self._body_hl.addWidget(self._preview_divider)
 
         self._preview_dock = self._build_preview_dock()
@@ -1682,187 +2058,83 @@ class SettingsWindow(QWidget):
         shell.addWidget(body, 1)
 
     # ------------------------------------------------------------------
-    # Clean Minimal Titlebar (No gimmicks or extra badges)
+    # Titlebar (Single Sun / Moon Vector Button + Minimize + Close)
     # ------------------------------------------------------------------
     def _build_title_bar(self) -> QWidget:
         self._title_bar = QWidget()
+        self._title_bar.setObjectName("TitleBar")
+        self._title_bar.setAttribute(Qt.WidgetAttribute.WA_StyledBackground, True)
         self._title_bar.setFixedHeight(44)
-        self._title_bar.setStyleSheet(
-            f"background: {CURRENT_THEME['c_titlebar']}; border-top-left-radius: 13px; border-top-right-radius: 13px;"
-        )
+
         hl = QHBoxLayout(self._title_bar)
         hl.setContentsMargins(16, 0, 12, 0)
         hl.setSpacing(10)
 
         badge = QLabel()
+        badge.setObjectName("TitleBadge")
+        badge.setAttribute(Qt.WidgetAttribute.WA_StyledBackground, True)
         badge.setFixedSize(24, 24)
         badge.setAlignment(Qt.AlignmentFlag.AlignCenter)
         badge.setPixmap(make_svg_icon("hand", "#FFFFFF", 13).pixmap(QSize(13, 13)))
-        badge.setStyleSheet(f"background: {CURRENT_THEME['c_accent']}; border-radius: 6px;")
         hl.addWidget(badge, 0, Qt.AlignmentFlag.AlignVCenter)
 
-        self._title_lbl = _label("TinyHand Windows", 13, CURRENT_THEME["c_text"], bold=True)
+        self._title_lbl = QLabel("TinyHand Windows")
+        self._title_lbl.setObjectName("TitleLabel")
         hl.addWidget(self._title_lbl, 0, Qt.AlignmentFlag.AlignVCenter)
         hl.addStretch()
 
-        # Clean explicit two-button segmented switcher [ Dark | Light ] in titlebar!
-        self._theme_switcher = ThemeSegmentedSwitcher(self.theme_mode)
-        self._theme_switcher.themeChanged.connect(self.set_theme)
-        hl.addWidget(self._theme_switcher, 0, Qt.AlignmentFlag.AlignVCenter)
+        # Single sleek Sun / Moon vector icon button
+        self._btn_theme = QPushButton()
+        self._btn_theme.setObjectName("ThemeToggleBtn")
+        self._btn_theme.setFixedSize(30, 26)
+        self._btn_theme.setIconSize(QSize(15, 15))
+        self._btn_theme.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
+        self._btn_theme.clicked.connect(self._toggle_theme)
+        hl.addWidget(self._btn_theme, 0, Qt.AlignmentFlag.AlignVCenter)
 
         self._btn_min = QPushButton()
+        self._btn_min.setObjectName("TitleMinBtn")
         self._btn_min.setFixedSize(30, 26)
-        self._btn_min.setIcon(make_svg_icon("minimize", CURRENT_THEME["c_text_muted"], 12))
         self._btn_min.setIconSize(QSize(12, 12))
         self._btn_min.setToolTip("Minimize")
         self._btn_min.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
-        hover_bg = "rgba(255, 255, 255, 18)" if CURRENT_THEME["mode"] == "dark" else "rgba(0, 0, 0, 18)"
-        self._btn_min.setStyleSheet(
-            "QPushButton { background: transparent; border: none; border-radius: 6px; }\n"
-            f"QPushButton:hover {{ background: {hover_bg}; }}"
-        )
         self._btn_min.clicked.connect(self.showMinimized)
         hl.addWidget(self._btn_min, 0, Qt.AlignmentFlag.AlignVCenter)
 
         self._btn_close = QPushButton()
+        self._btn_close.setObjectName("TitleCloseBtn")
         self._btn_close.setFixedSize(30, 26)
-        self._btn_close.setIcon(make_svg_icon("close", CURRENT_THEME["c_text_muted"], 12))
         self._btn_close.setIconSize(QSize(12, 12))
         self._btn_close.setToolTip("Close")
         self._btn_close.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
-        self._btn_close.setStyleSheet(
-            "QPushButton { background: transparent; border: none; border-radius: 6px; }\n"
-            "QPushButton:hover { background: #DC2626; }"
-        )
         self._btn_close.clicked.connect(self.hide)
         hl.addWidget(self._btn_close, 0, Qt.AlignmentFlag.AlignVCenter)
 
         return self._title_bar
 
-    def set_theme(self, mode: str):
-        if mode not in THEMES:
-            mode = "dark"
-        self.theme_mode = mode
-        if self.config:
-            self.config.set("theme_mode", mode)
-            self.config.save()
-        set_active_theme(mode)
-
-        # Update titlebar controls & switcher
-        if hasattr(self, "_theme_switcher"):
-            self._theme_switcher.apply_theme(mode)
-        if hasattr(self, "_title_bar"):
-            self._title_bar.setStyleSheet(
-                f"background: {CURRENT_THEME['c_titlebar']}; border-top-left-radius: 13px; border-top-right-radius: 13px;"
-            )
-        self._title_lbl.setStyleSheet(
-            f"color: {CURRENT_THEME['c_text']}; font-size: 13px; font-weight: 600; "
-            "background: transparent; border: none; font-family: 'Segoe UI', sans-serif;"
-        )
-        hover_min = "rgba(255, 255, 255, 18)" if CURRENT_THEME["mode"] == "dark" else "rgba(0, 0, 0, 18)"
-        self._btn_min.setIcon(make_svg_icon("minimize", CURRENT_THEME['c_text_muted'], 12))
-        self._btn_min.setStyleSheet(
-            "QPushButton { background: transparent; border: none; border-radius: 6px; }\n"
-            f"QPushButton:hover {{ background: {hover_min}; }}"
-        )
-        self._btn_close.setIcon(make_svg_icon("close", CURRENT_THEME['c_text_muted'], 12))
-
-        # Update shell dividers & frames
-        self._hdiv.setStyleSheet(f"background: {CURRENT_THEME['c_sidebar_border']};")
-        self._vdiv1.setStyleSheet(f"background: {CURRENT_THEME['c_sidebar_border']};")
-        self._preview_divider.setStyleSheet(f"background: {CURRENT_THEME['c_sidebar_border']};")
-        self._sidebar.setStyleSheet(f"background: {CURRENT_THEME['c_sidebar']}; border-bottom-left-radius: 13px;")
-        self._preview_dock.setStyleSheet(f"background: {CURRENT_THEME['c_sidebar']}; border-bottom-right-radius: 13px;")
-
-        # Update sidebar nav items
-        for item in self._nav_items:
-            item.update_theme()
-
-        # Update preview summary pill & preview controls
-        if hasattr(self, "_preview_summary_wrap"):
-            self._preview_summary_wrap.setStyleSheet(
-                f"#PreviewSummaryPill {{ background: {CURRENT_THEME['c_surface']}; "
-                f"border: 1px solid {CURRENT_THEME['c_border']}; border-radius: 9px; }}"
-            )
-        if hasattr(self, "_spec_pointer_lbl"):
-            self._spec_pointer_lbl.setStyleSheet(
-                f"color: {CURRENT_THEME['c_text']}; font-size: 12px; font-weight: 600; "
-                "background: transparent; border: none; font-family: 'Segoe UI', sans-serif;"
-            )
-        if hasattr(self, "_spec_meta_lbl"):
-            self._spec_meta_lbl.setStyleSheet(
-                f"color: {CURRENT_THEME['c_text_muted']}; font-size: 11px; "
-                "background: transparent; border: none; font-family: 'Segoe UI', sans-serif;"
-            )
-
-        # Update preview action buttons
-        if hasattr(self, "_refresh_preview_controls"):
-            self._refresh_preview_controls()
-
-        # Update live preview stage
-        if self._preview:
-            self._preview.update()
-
-        # Rebuild pages stack in the new theme while keeping active page
-        cur_idx = self._stack.currentIndex()
-        old_stack = self._stack
-        old_stack.hide()
-        self._body_hl.removeWidget(old_stack)
-        old_stack.setParent(None)
-        old_stack.deleteLater()
-
-        self._stack = self._build_pages()
-        self._body_hl.insertWidget(2, self._stack, 1)
-        self._switch_page(cur_idx)
-        self._sync_preview_from_state()
-
-        # Trigger window repaint
-        self.update()
-
-    def _refresh_preview_controls(self):
-        is_dark = CURRENT_THEME["mode"] == "dark"
-        bg = "#22252C" if is_dark else "#DCE0E6"
-        fg = "#F3F4F6" if is_dark else "#181A1F"
-        bd = "#2F333D" if is_dark else "#C4C9D2"
-        hbg = "#2A2E37" if is_dark else "#E6E8EC"
-        hbd = "#454B59" if is_dark else "#A0A8B4"
-        ch_bg = "#1E3A8A" if is_dark else "#2563EB"
-        ch_fg = "#93C5FD" if is_dark else "#FFFFFF"
-        ch_bd = "#3B82F6" if is_dark else "#1D4ED8"
-        qss = (
-            f"QPushButton {{ background: {bg}; color: {fg}; "
-            f"border: 1px solid {bd}; border-radius: 7px; "
-            "padding: 3px 8px; font-size: 11px; font-weight: 500; font-family: 'Segoe UI'; }\n"
-            f"QPushButton:hover {{ background: {hbg}; color: {fg}; border-color: {hbd}; }}\n"
-            f"QPushButton:checked {{ background: {ch_bg}; color: {ch_fg}; border-color: {ch_bd}; font-weight: 600; }}"
-        )
-        for btn in (self._pg_btn_draw, self._pg_btn_spot, self._btn_tap, self._btn_clr):
-            btn.setStyleSheet(qss)
-            if hasattr(btn, "_icon_name"):
-                btn.setIcon(make_svg_icon(btn._icon_name, CURRENT_THEME["c_text_muted"], 12))
-
     # ------------------------------------------------------------------
-    # Left Navigation Rail
+    # Left Navigation Rail (6 Colorful 24x24 Rounded-Square Badges)
     # ------------------------------------------------------------------
     def _build_sidebar(self) -> QWidget:
         sb = QWidget()
+        sb.setObjectName("Sidebar")
+        sb.setAttribute(Qt.WidgetAttribute.WA_StyledBackground, True)
         sb.setFixedWidth(self.SIDEBAR_W)
-        sb.setStyleSheet(f"background: {C_SIDEBAR}; border-bottom-left-radius: 13px;")
 
         vl = QVBoxLayout(sb)
         vl.setContentsMargins(0, 14, 0, 14)
-        vl.setSpacing(3)
+        vl.setSpacing(4)
 
         nav_defs = [
-            ("settings", "General"),
-            ("hand", "Pointers"),
-            ("spotlight", "Style & FX"),
-            ("pen", "Ink & Draw"),
-            ("sound_on", "Sound"),
-            ("info", "About"),
+            ("settings", "General", "#787C85"),
+            ("hand", "Pointers", "#7C5DFA"),
+            ("sparkles", "Style & FX", "#EC608A"),
+            ("pen", "Ink & Draw", "#F59E0B"),
+            ("sound_on", "Sound", "#3B82F6"),
+            ("info_i", "About", "#6B7280"),
         ]
-        for idx, (icon_key, title) in enumerate(nav_defs):
-            item = NavRailButton(icon_key, title)
+        for idx, (icon_key, title, badge_col) in enumerate(nav_defs):
+            item = NavRailButton(icon_key, title, badge_col)
             item.setChecked(idx == 0)
             item.clicked.connect(lambda i=idx: self._switch_page(i))
             self._nav_items.append(item)
@@ -1872,18 +2144,19 @@ class SettingsWindow(QWidget):
 
         ver_wrap = QHBoxLayout()
         ver_wrap.setContentsMargins(20, 0, 16, 0)
-        ver_wrap.addWidget(_label("Version 1.0.0", 11, muted=True))
+        ver_wrap.addWidget(_label(f"Version {APP_VERSION}", 11, muted=True))
         vl.addLayout(ver_wrap)
 
         return sb
 
     # ------------------------------------------------------------------
-    # Right Dock: Calm Live Preview
+    # Right Dock: Live Preview
     # ------------------------------------------------------------------
     def _build_preview_dock(self) -> QWidget:
         dock = QWidget()
+        dock.setObjectName("PreviewDock")
+        dock.setAttribute(Qt.WidgetAttribute.WA_StyledBackground, True)
         dock.setFixedWidth(self.PREVIEW_DOCK_W)
-        dock.setStyleSheet(f"background: {C_SIDEBAR}; border-bottom-right-radius: 13px;")
 
         vl = QVBoxLayout(dock)
         vl.setContentsMargins(14, 18, 14, 16)
@@ -1891,7 +2164,7 @@ class SettingsWindow(QWidget):
 
         hdr = QHBoxLayout()
         hdr.setContentsMargins(2, 0, 2, 0)
-        hdr.addWidget(_label("Preview", 12, C_TEXT_SEC, bold=True))
+        hdr.addWidget(_label("Preview", 12, "textSec", bold=True))
         hdr.addStretch()
         hdr.addWidget(_label("Click or drag", 11, muted=True))
         vl.addLayout(hdr)
@@ -1899,16 +2172,15 @@ class SettingsWindow(QWidget):
         self._preview = LivePreviewStage(self.assets_dir, self.overlay.hand_assets)
         vl.addWidget(self._preview, 0, Qt.AlignmentFlag.AlignHCenter)
 
-        # Clean 4-button action strip
         ctrl_row = QHBoxLayout()
         ctrl_row.setSpacing(6)
 
         self._pg_btn_draw = self._mini_ctrl_btn("Draw", "pen", checkable=True, checked=True)
-        self._pg_btn_draw.toggled.connect(lambda on: setattr(self._preview, "draw_enabled", on))
+        self._pg_btn_draw.toggled.connect(self._on_preview_draw_toggled)
         ctrl_row.addWidget(self._pg_btn_draw)
 
         self._pg_btn_spot = self._mini_ctrl_btn("Spot", "spotlight", checkable=True, checked=False)
-        self._pg_btn_spot.toggled.connect(lambda on: setattr(self._preview, "spotlight_preview", on))
+        self._pg_btn_spot.toggled.connect(self._on_preview_spot_toggled)
         ctrl_row.addWidget(self._pg_btn_spot)
 
         self._btn_tap = self._mini_ctrl_btn("Tap", "pops", checkable=False)
@@ -1921,24 +2193,43 @@ class SettingsWindow(QWidget):
 
         vl.addLayout(ctrl_row)
 
-        # Compact understated active pointer note
         self._preview_summary_wrap = QWidget()
         self._preview_summary_wrap.setObjectName("PreviewSummaryPill")
-        self._preview_summary_wrap.setStyleSheet(
-            f"#PreviewSummaryPill {{ background: {CURRENT_THEME['c_surface']}; "
-            f"border: 1px solid {CURRENT_THEME['c_border']}; border-radius: 9px; }}"
-        )
+        self._preview_summary_wrap.setAttribute(Qt.WidgetAttribute.WA_StyledBackground, True)
         sum_vl = QVBoxLayout(self._preview_summary_wrap)
         sum_vl.setContentsMargins(12, 9, 12, 9)
         sum_vl.setSpacing(3)
-        self._spec_pointer_lbl = _label("Coral Vinyl  ·  Size M", 12, CURRENT_THEME["c_text"], bold=True)
-        self._spec_meta_lbl = _label("Match ink  ·  Shadow on", 11, CURRENT_THEME["c_text_muted"])
+        self._spec_pointer_lbl = _label("Coral Vinyl  ·  Size M", 12, "text", bold=True)
+        self._spec_meta_lbl = _label("Match ink  ·  Shadow on", 11, muted=True)
         sum_vl.addWidget(self._spec_pointer_lbl)
         sum_vl.addWidget(self._spec_meta_lbl)
         vl.addWidget(self._preview_summary_wrap)
 
         vl.addStretch()
         return dock
+
+    def _on_preview_draw_toggled(self, on: bool):
+        if self._preview:
+            self._preview.draw_enabled = on
+        self._refresh_preview_icons()
+
+    def _on_preview_spot_toggled(self, on: bool):
+        if self._preview:
+            self._preview.spotlight_preview = on
+        self._refresh_preview_icons()
+
+    def _refresh_preview_icons(self):
+        if not hasattr(self, "_pg_btn_draw"):
+            return
+        for btn in (self._pg_btn_draw, self._pg_btn_spot, self._btn_tap, self._btn_clr):
+            icon_name = getattr(btn, "_icon_name", None)
+            if not icon_name:
+                continue
+            if btn.isCheckable() and btn.isChecked():
+                col = CURRENT_THEME["c_checked_fg"]
+            else:
+                col = CURRENT_THEME["c_text_muted"]
+            btn.setIcon(make_svg_icon(icon_name, col, 12))
 
     @staticmethod
     def _mini_ctrl_btn(
@@ -1948,30 +2239,14 @@ class SettingsWindow(QWidget):
         checked: bool = False,
     ) -> QPushButton:
         btn = QPushButton(text)
+        btn.setProperty("role", "previewCtrl")
         btn.setCheckable(checkable)
         if checkable:
             btn.setChecked(checked)
         btn._icon_name = icon_name
-        is_dark = CURRENT_THEME["mode"] == "dark"
-        bg = "#22252C" if is_dark else "#DCE0E6"
-        fg = "#F3F4F6" if is_dark else "#181A1F"
-        bd = "#2F333D" if is_dark else "#C4C9D2"
-        hbg = "#2A2E37" if is_dark else "#E6E8EC"
-        hbd = "#454B59" if is_dark else "#A0A8B4"
-        ch_bg = "#1E3A8A" if is_dark else "#2563EB"
-        ch_fg = "#93C5FD" if is_dark else "#FFFFFF"
-        ch_bd = "#3B82F6" if is_dark else "#1D4ED8"
-        btn.setIcon(make_svg_icon(icon_name, CURRENT_THEME["c_text_muted"], 12))
         btn.setIconSize(QSize(12, 12))
         btn.setFixedHeight(29)
         btn.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
-        btn.setStyleSheet(
-            f"QPushButton {{ background: {bg}; color: {fg}; "
-            f"border: 1px solid {bd}; border-radius: 7px; "
-            "padding: 3px 8px; font-size: 11px; font-weight: 500; font-family: 'Segoe UI'; }\n"
-            f"QPushButton:hover {{ background: {hbg}; color: {fg}; border-color: {hbd}; }}\n"
-            f"QPushButton:checked {{ background: {ch_bg}; color: {ch_fg}; border-color: {ch_bd}; font-weight: 600; }}"
-        )
         return btn
 
     # ------------------------------------------------------------------
@@ -1982,7 +2257,9 @@ class SettingsWindow(QWidget):
         self._sound_tiles.clear()
         self._swatch_btns.clear()
         stack = QStackedWidget()
-        stack.setStyleSheet(f"background: {CURRENT_THEME['c_content']};")
+        stack.setObjectName("PagesStack")
+        stack.setAttribute(Qt.WidgetAttribute.WA_StyledBackground, True)
+        stack.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground, True)
         stack.addWidget(self._page_general())
         stack.addWidget(self._page_pointers())
         stack.addWidget(self._page_style_fx())
@@ -2004,16 +2281,15 @@ class SettingsWindow(QWidget):
     # ==================================================================
     def _page_general(self) -> QScrollArea:
         scroll, _inner, vbox = _page_scroll()
-        vbox.addWidget(_label("General", 18, C_TEXT, bold=True))
+        vbox.addWidget(_label("General", 18, "pageTitle", bold=True))
 
-        # Shortcuts
         vbox.addWidget(_section_label("Shortcuts"))
         hk_body = QVBoxLayout()
         hk_body.setSpacing(6)
         for i, (cfg_key, lbl_txt) in enumerate(HOTKEY_ROWS):
             hk_row = QHBoxLayout()
             hk_row.setContentsMargins(0, 3, 0, 3)
-            hk_row.addWidget(_label(lbl_txt, 12, C_TEXT))
+            hk_row.addWidget(_label(lbl_txt, 12, "text"))
             hk_row.addStretch()
             hk_btn = HotkeyButton(self.config.get(cfg_key, ""))
             hk_btn.hotkeyChanged.connect(lambda v, k=cfg_key: self._on_hotkey_changed(k, v))
@@ -2023,7 +2299,6 @@ class SettingsWindow(QWidget):
                 _add_hsep(hk_body)
         vbox.addWidget(SettingsGroup(hk_body))
 
-        # Hold-to-Draw Key
         vbox.addWidget(_section_label("Quick Draw"))
         draw_body = QVBoxLayout()
         draw_body.setSpacing(6)
@@ -2032,15 +2307,14 @@ class SettingsWindow(QWidget):
         hd_hl.setContentsMargins(0, 2, 0, 2)
         hd_col = QVBoxLayout()
         hd_col.setSpacing(2)
-        hd_col.addWidget(_label("Hold-to-Draw Key", 12, C_TEXT, bold=True))
-        hd_sub = _label("Hold while dragging to draw without Draw mode", 11, C_TEXT_MUTED)
+        hd_col.addWidget(_label("Hold-to-Draw Key", 12, "text", bold=True))
+        hd_sub = _label("Hold while dragging to draw without Draw mode", 11, muted=True)
         hd_sub.setWordWrap(True)
         hd_col.addWidget(hd_sub)
         hd_hl.addLayout(hd_col, 1)
 
         hd_combo = QComboBox()
         hd_combo.setFixedWidth(124)
-        hd_combo.setStyleSheet(self._combo_qss())
         cur_hd = self.config.get("hold_to_draw_key", "shift") or "off"
         for k, disp in HOLD_KEY_OPTIONS:
             hd_combo.addItem(disp, k)
@@ -2052,7 +2326,6 @@ class SettingsWindow(QWidget):
         draw_body.addLayout(hd_hl)
         vbox.addWidget(SettingsGroup(draw_body))
 
-        # Startup
         vbox.addWidget(_section_label("Startup"))
         st_body = QVBoxLayout()
         st_body.setSpacing(6)
@@ -2083,7 +2356,7 @@ class SettingsWindow(QWidget):
     def _page_pointers(self) -> QScrollArea:
         scroll, _inner, vbox = _page_scroll()
 
-        vbox.addWidget(_label("Pointers", 18, C_TEXT, bold=True))
+        vbox.addWidget(_label("Pointers", 18, "pageTitle", bold=True))
 
         filter_bar = QHBoxLayout()
         filter_bar.setSpacing(8)
@@ -2092,12 +2365,6 @@ class SettingsWindow(QWidget):
         self._search_input.setPlaceholderText("Search pointers...")
         self._search_input.setClearButtonEnabled(True)
         self._search_input.setFixedHeight(32)
-        self._search_input.setStyleSheet(
-            f"QLineEdit {{ background: {CURRENT_THEME['c_control_bg']}; color: {CURRENT_THEME['c_text']}; "
-            f"border: 1px solid {CURRENT_THEME['c_border']}; border-radius: 8px; "
-            "padding: 3px 10px; font-size: 12px; font-family: 'Segoe UI'; }\n"
-            f"QLineEdit:focus {{ border: 1px solid {CURRENT_THEME['c_accent_light']}; background: {CURRENT_THEME['c_surface']}; }}"
-        )
         self._search_input.textChanged.connect(self._on_search_changed)
         filter_bar.addWidget(self._search_input, 1)
 
@@ -2109,8 +2376,7 @@ class SettingsWindow(QWidget):
         filter_bar.addWidget(cat_seg)
         vbox.addLayout(filter_bar)
 
-        grid_container = QWidget()
-        grid_container.setStyleSheet("background: transparent;")
+        grid_container = _transparent_wrap()
         self._pointer_grid_layout = QGridLayout(grid_container)
         self._pointer_grid_layout.setContentsMargins(0, 0, 0, 0)
         self._pointer_grid_layout.setSpacing(8)
@@ -2186,9 +2452,8 @@ class SettingsWindow(QWidget):
     # ==================================================================
     def _page_style_fx(self) -> QScrollArea:
         scroll, _inner, vbox = _page_scroll()
-        vbox.addWidget(_label("Style & FX", 18, C_TEXT, bold=True))
+        vbox.addWidget(_label("Style & FX", 18, "pageTitle", bold=True))
 
-        # Pointer appearance
         vbox.addWidget(_section_label("Pointer"))
         ptr_body = QVBoxLayout()
         ptr_body.setSpacing(6)
@@ -2211,7 +2476,8 @@ class SettingsWindow(QWidget):
 
         _add_hsep(ptr_body)
         sh_row, self._shadow_toggle = _toggle_row(
-            "Drop Shadow", "Render a soft silhouette shadow beneath the pointer",
+            "Drop Shadow",
+            "Render a soft silhouette shadow beneath the pointer",
             bool(self.config.get("show_shadow", True)),
         )
         self._shadow_toggle.toggled.connect(self._on_shadow_toggled)
@@ -2219,19 +2485,20 @@ class SettingsWindow(QWidget):
         _add_hsep(ptr_body)
 
         rip_row, self._ripple_toggle = _toggle_row(
-            "Click Ripple Ring", "Show an expanding pulse ring when clicking",
+            "Click Ripple Ring",
+            "Show an expanding pulse ring when clicking",
             bool(self.config.get("click_ripple", True)),
         )
         self._ripple_toggle.toggled.connect(self._on_ripple_toggled)
         ptr_body.addWidget(rip_row)
         vbox.addWidget(SettingsGroup(ptr_body))
 
-        # Tap Bubbles
         vbox.addWidget(_section_label("Tap Bubbles"))
         bub_body = QVBoxLayout()
         bub_body.setSpacing(6)
         bub_row, self._bubble_toggle = _toggle_row(
-            "Comic Tap Bubbles", "Display short callout words above clicks",
+            "Comic Tap Bubbles",
+            "Display short callout words above clicks",
             bool(self.config.get("show_comic_bubbles", True)),
         )
         self._bubble_toggle.toggled.connect(self._on_bubbles_toggled)
@@ -2240,7 +2507,7 @@ class SettingsWindow(QWidget):
 
         pack_row = QHBoxLayout()
         pack_row.setContentsMargins(0, 4, 0, 2)
-        pack_row.addWidget(_label("Word Style", 12, C_TEXT, bold=True))
+        pack_row.addWidget(_label("Word Style", 12, "text", bold=True))
         pack_row.addStretch()
         pack_seg = SegmentedControl(
             [("Playful", "funny"), ("Minimal", "clean")],
@@ -2251,7 +2518,6 @@ class SettingsWindow(QWidget):
         bub_body.addLayout(pack_row)
         vbox.addWidget(SettingsGroup(bub_body))
 
-        # Spotlight
         vbox.addWidget(_section_label("Spotlight"))
         spot_body = QVBoxLayout()
         spot_body.setSpacing(10)
@@ -2277,7 +2543,7 @@ class SettingsWindow(QWidget):
     # ==================================================================
     def _page_ink(self) -> QScrollArea:
         scroll, _inner, vbox = _page_scroll()
-        vbox.addWidget(_label("Ink & Draw", 18, C_TEXT, bold=True))
+        vbox.addWidget(_label("Ink & Draw", 18, "pageTitle", bold=True))
 
         vbox.addWidget(_section_label("Color"))
         color_body = QVBoxLayout()
@@ -2297,7 +2563,8 @@ class SettingsWindow(QWidget):
 
         _add_hsep(color_body)
         rb_row, self._rainbow_toggle = _toggle_row(
-            "Rainbow Ink", "Cycle colors smoothly while drawing strokes",
+            "Rainbow Ink",
+            "Cycle colors smoothly while drawing strokes",
             cur_ink == "rainbow",
         )
         self._rainbow_toggle.toggled.connect(self._on_rainbow_toggled)
@@ -2317,7 +2584,8 @@ class SettingsWindow(QWidget):
 
         smooth_on = bool(self.config.get("smooth_lines", False))
         sm_row, sm_toggle = _toggle_row(
-            "Smooth Lines", "Stabilize mouse shake for cleaner curves",
+            "Smooth Lines",
+            "Stabilize mouse shake for cleaner curves",
             smooth_on,
         )
         stroke_body.addWidget(sm_row)
@@ -2332,7 +2600,7 @@ class SettingsWindow(QWidget):
         _add_hsep(stroke_body)
         fade_hl = QHBoxLayout()
         fade_hl.setContentsMargins(0, 4, 0, 2)
-        fade_hl.addWidget(_label("Fade Out After", 12, C_TEXT, bold=True))
+        fade_hl.addWidget(_label("Fade Out After", 12, "text", bold=True))
         fade_hl.addStretch()
         fade_seg = SegmentedControl(
             [(lbl, sec) for lbl, sec in FADE_OPTIONS],
@@ -2347,18 +2615,17 @@ class SettingsWindow(QWidget):
         return scroll
 
     # ==================================================================
-    # Page 4: Sound (Purely Audio)
+    # Page 4: Sound
     # ==================================================================
     def _page_sound(self) -> QScrollArea:
         scroll, _inner, vbox = _page_scroll()
-        vbox.addWidget(_label("Sound", 18, C_TEXT, bold=True))
+        vbox.addWidget(_label("Sound", 18, "pageTitle", bold=True))
 
         vbox.addWidget(_section_label("Tap Sound"))
         tile_body = QVBoxLayout()
         tile_body.setSpacing(10)
 
-        grid_w = QWidget()
-        grid_w.setStyleSheet("background: transparent;")
+        grid_w = _transparent_wrap()
         grid = QGridLayout(grid_w)
         grid.setContentsMargins(0, 0, 0, 0)
         grid.setSpacing(8)
@@ -2381,7 +2648,8 @@ class SettingsWindow(QWidget):
 
         _add_hsep(tile_body)
         ls_row, ls_toggle = _toggle_row(
-            "Sound in Laser Mode", "Play tap audio when using the laser dot",
+            "Sound in Laser Mode",
+            "Play tap audio when using the laser dot",
             bool(self.config.get("laser_sound", False)),
         )
         ls_toggle.toggled.connect(self._on_laser_sound_toggled)
@@ -2410,24 +2678,24 @@ class SettingsWindow(QWidget):
     def _page_about(self) -> QScrollArea:
         scroll, _inner, vbox = _page_scroll()
 
-        vbox.addWidget(_label("About & Maintenance", 18, C_TEXT, bold=True))
+        vbox.addWidget(_label("About & Maintenance", 18, "pageTitle", bold=True))
 
-        # Hero Banner
         hero_body = QVBoxLayout()
         hero_body.setSpacing(6)
 
         icon_badge = QLabel()
+        icon_badge.setObjectName("AboutHeroBadge")
+        icon_badge.setAttribute(Qt.WidgetAttribute.WA_StyledBackground, True)
         icon_badge.setFixedSize(60, 60)
         icon_badge.setAlignment(Qt.AlignmentFlag.AlignCenter)
         icon_badge.setPixmap(make_svg_icon("hand", "#FFFFFF", 32).pixmap(QSize(32, 32)))
-        icon_badge.setStyleSheet(f"background: {C_ACCENT}; border-radius: 16px;")
         hero_body.addWidget(icon_badge, 0, Qt.AlignmentFlag.AlignHCenter)
 
-        title = _label("TinyHand Windows", 20, C_TEXT, bold=True)
+        title = _label("TinyHand Windows", 20, "pageTitle", bold=True)
         title.setAlignment(Qt.AlignmentFlag.AlignCenter)
         hero_body.addWidget(title)
 
-        ver = _label(f"Version {APP_VERSION} · Windows 64-bit Native", 12, C_TEXT_SEC)
+        ver = _label(f"Version {APP_VERSION} · Windows 64-bit Native", 12, "textSec")
         ver.setAlignment(Qt.AlignmentFlag.AlignCenter)
         hero_body.addWidget(ver)
 
@@ -2436,9 +2704,6 @@ class SettingsWindow(QWidget):
         hero_body.addWidget(tag)
         vbox.addWidget(SettingsGroup(hero_body))
 
-        # -------------------------------------------------------------
-        # Software Updates Section (Requested Feature)
-        # -------------------------------------------------------------
         vbox.addWidget(_section_label("Software Updates"))
         update_body = QVBoxLayout()
         update_body.setSpacing(10)
@@ -2448,7 +2713,7 @@ class SettingsWindow(QWidget):
         up_info_col = QVBoxLayout()
         up_info_col.setSpacing(2)
 
-        self._update_status_lbl = _label(f"Installed Version: v{APP_VERSION}", 12, C_TEXT, bold=True)
+        self._update_status_lbl = _label(f"Installed Version: v{APP_VERSION}", 12, "text", bold=True)
         self._update_sub_lbl = _label("Check GitHub Releases for latest features and bug fixes.", 11, muted=True)
         self._update_sub_lbl.setWordWrap(True)
         up_info_col.addWidget(self._update_status_lbl)
@@ -2460,18 +2725,16 @@ class SettingsWindow(QWidget):
         up_top_row.addWidget(self._btn_check_update, 0, Qt.AlignmentFlag.AlignVCenter)
         update_body.addLayout(up_top_row)
 
-        # Dynamic update result card (revealed on check)
         self._update_result_frame = QFrame()
-        self._update_result_frame.setStyleSheet(
-            f"background: {CURRENT_THEME['c_control_bg']}; border: 1px solid {CURRENT_THEME['c_border']}; border-radius: 8px;"
-        )
+        self._update_result_frame.setObjectName("UpdateResultFrame")
+        self._update_result_frame.setAttribute(Qt.WidgetAttribute.WA_StyledBackground, True)
         self._update_result_frame.setVisible(False)
         up_res_vl = QVBoxLayout(self._update_result_frame)
         up_res_vl.setContentsMargins(12, 10, 12, 10)
         up_res_vl.setSpacing(6)
 
-        self._update_msg_lbl = _label("", 12, C_TEXT, bold=True)
-        self._update_notes_lbl = _label("", 11, C_TEXT_MUTED)
+        self._update_msg_lbl = _label("", 12, "text", bold=True)
+        self._update_notes_lbl = _label("", 11, muted=True)
         self._update_notes_lbl.setWordWrap(True)
         up_res_vl.addWidget(self._update_msg_lbl)
         up_res_vl.addWidget(self._update_notes_lbl)
@@ -2490,9 +2753,6 @@ class SettingsWindow(QWidget):
         update_body.addWidget(self._update_result_frame)
         vbox.addWidget(SettingsGroup(update_body))
 
-        # -------------------------------------------------------------
-        # Diagnostics & Troubleshooting Section (Requested Feature)
-        # -------------------------------------------------------------
         vbox.addWidget(_section_label("Diagnostics & Bug Troubleshooting"))
         diag_body = QVBoxLayout()
         diag_body.setSpacing(8)
@@ -2505,11 +2765,12 @@ class SettingsWindow(QWidget):
         diag_btns_row.setSpacing(8)
 
         self._btn_copy_diag = _button("Copy System Diagnostics")
+        self._btn_copy_diag.setProperty("copied", "false")
         self._btn_copy_diag.setToolTip("Copies OS, Python, DPI, and pointer config to clipboard for bug reports.")
         self._btn_copy_diag.clicked.connect(self._copy_diagnostic_info)
         diag_btns_row.addWidget(self._btn_copy_diag)
 
-        self._btn_repair_cfg = _button("Verify & Repair Config")
+        self._btn_repair_cfg = _button("Verify && Repair Config")
         self._btn_repair_cfg.setToolTip("Validates and repairs missing config keys without losing custom uploads.")
         self._btn_repair_cfg.clicked.connect(self._repair_config)
         diag_btns_row.addWidget(self._btn_repair_cfg)
@@ -2526,7 +2787,7 @@ class SettingsWindow(QWidget):
 
         report_row = QHBoxLayout()
         report_row.setContentsMargins(0, 2, 0, 2)
-        report_row.addWidget(_label("Found a bug or have a suggestion?", 12, C_TEXT))
+        report_row.addWidget(_label("Found a bug or have a suggestion?", 12, "text"))
         report_row.addStretch()
         btn_report = _button("Report Bug on GitHub", outline=True)
         btn_report.clicked.connect(self._report_bug)
@@ -2535,9 +2796,6 @@ class SettingsWindow(QWidget):
 
         vbox.addWidget(SettingsGroup(diag_body))
 
-        # -------------------------------------------------------------
-        # Project Specifications & License
-        # -------------------------------------------------------------
         vbox.addWidget(_section_label("Specifications & Credits"))
         info_body = QVBoxLayout()
         info_body.setSpacing(6)
@@ -2549,9 +2807,9 @@ class SettingsWindow(QWidget):
             ("License", "100% Free & Open Source (MIT)"),
         ]:
             r = QHBoxLayout()
-            r.addWidget(_label(k, 12, C_TEXT_SEC))
+            r.addWidget(_label(k, 12, "textSec"))
             r.addStretch()
-            r.addWidget(_label(v, 12, C_TEXT, bold=True))
+            r.addWidget(_label(v, 12, "text", bold=True))
             info_body.addLayout(r)
             if k != "License":
                 _add_hsep(info_body)
@@ -2572,11 +2830,22 @@ class SettingsWindow(QWidget):
     # -------------------------------------------------------------
     # Update & Diagnostics Action Handlers
     # -------------------------------------------------------------
+    @staticmethod
+    def _set_label_role(lbl: QLabel, role: str):
+        lbl.setProperty("role", role)
+        st = lbl.style()
+        if st:
+            st.unpolish(lbl)
+            st.polish(lbl)
+        lbl.update()
+
     def _check_for_updates(self):
         self._btn_check_update.setEnabled(False)
         self._btn_check_update.setText("Checking...")
         self._update_status_lbl.setText("Checking GitHub for releases...")
-        self._update_sub_lbl.setText("Querying https://api.github.com/repos/wajahat-alip/tinyhand-windows/releases/latest...")
+        self._update_sub_lbl.setText(
+            "Querying https://api.github.com/repos/wajahat-alip/tinyhand-windows/releases/latest..."
+        )
 
         self._update_worker = UpdateCheckerThread(APP_VERSION, "wajahat-alip/tinyhand-windows", self)
         self._update_worker.check_finished.connect(self._on_update_check_finished)
@@ -2589,10 +2858,13 @@ class SettingsWindow(QWidget):
 
         if not res.get("success"):
             self._update_status_lbl.setText("Check Failed (Network Error)")
-            self._update_sub_lbl.setText(f"Could not reach GitHub ({res.get('error', 'Unknown')}). You can visit releases manually.")
+            self._set_label_role(self._update_status_lbl, "statusDanger")
+            self._update_sub_lbl.setText(
+                f"Could not reach GitHub ({res.get('error', 'Unknown')}). You can visit releases manually."
+            )
             self._update_result_frame.setVisible(True)
             self._update_msg_lbl.setText("Unable to verify latest release automatically")
-            self._update_msg_lbl.setStyleSheet(f"color: {C_DANGER}; font-size: 12px; font-weight: 600;")
+            self._set_label_role(self._update_msg_lbl, "statusDanger")
             self._update_notes_lbl.setText("Please check your internet connection or browse releases on GitHub.")
             self._btn_download_update.setVisible(False)
             self._btn_view_release.setVisible(True)
@@ -2606,20 +2878,20 @@ class SettingsWindow(QWidget):
         self._update_result_frame.setVisible(True)
         if is_new:
             self._update_status_lbl.setText(f"Update Available: v{latest_ver}!")
-            self._update_status_lbl.setStyleSheet(f"color: {C_ACCENT_LIGHT}; font-size: 12px; font-weight: 600;")
+            self._set_label_role(self._update_status_lbl, "statusAccent")
             self._update_sub_lbl.setText(f"A newer version (v{latest_ver}) is available for download.")
             self._update_msg_lbl.setText(f"New Version v{latest_ver} Available!")
-            self._update_msg_lbl.setStyleSheet(f"color: {C_SUCCESS}; font-size: 12px; font-weight: 600;")
+            self._set_label_role(self._update_msg_lbl, "statusSuccess")
             self._update_notes_lbl.setText(notes if notes else "Performance improvements, bug fixes and enhancements.")
             self._btn_download_update.setVisible(True)
             self._btn_view_release.setVisible(True)
             self._btn_view_release.setText("View Release Notes")
         else:
             self._update_status_lbl.setText(f"You're Up to Date (v{APP_VERSION})")
-            self._update_status_lbl.setStyleSheet(f"color: {C_SUCCESS}; font-size: 12px; font-weight: 600;")
+            self._set_label_role(self._update_status_lbl, "statusSuccess")
             self._update_sub_lbl.setText("You are currently running the latest official version of TinyHand Windows.")
             self._update_msg_lbl.setText(f"TinyHand Windows v{APP_VERSION} is the latest version.")
-            self._update_msg_lbl.setStyleSheet(f"color: {C_SUCCESS}; font-size: 12px; font-weight: 600;")
+            self._set_label_role(self._update_msg_lbl, "statusSuccess")
             self._update_notes_lbl.setText("No new updates are pending. All features are up to date.")
             self._btn_download_update.setVisible(False)
             self._btn_view_release.setVisible(True)
@@ -2635,6 +2907,7 @@ class SettingsWindow(QWidget):
 
     def _gather_diagnostic_info(self) -> str:
         import platform
+
         screen = QGuiApplication.primaryScreen()
         scr_geom = screen.geometry() if screen else None
         dpr = screen.devicePixelRatio() if screen else 1.0
@@ -2660,25 +2933,26 @@ class SettingsWindow(QWidget):
             clipboard.setText(info)
             old_txt = self._btn_copy_diag.text()
             self._btn_copy_diag.setText("Copied to Clipboard!")
-            self._btn_copy_diag.setStyleSheet(
-                f"QPushButton {{ background: #064E3B; color: #6EE7B7; "
-                f"border: 1px solid {C_SUCCESS}; border-radius: 7px; padding: 7px 14px; font-weight: 600; font-size: 12px; }}"
-            )
+            self._btn_copy_diag.setProperty("copied", "true")
+            st = self._btn_copy_diag.style()
+            if st:
+                st.unpolish(self._btn_copy_diag)
+                st.polish(self._btn_copy_diag)
             QTimer.singleShot(2500, lambda: self._restore_copy_diag_btn(old_txt))
 
     def _restore_copy_diag_btn(self, old_txt: str):
         self._btn_copy_diag.setText(old_txt)
-        self._btn_copy_diag.setStyleSheet(
-            "QPushButton { background: #252B38; color: #F1F5F9; "
-            "border: 1px solid #4B5568; border-radius: 7px; "
-            "padding: 7px 14px; font-weight: 500; font-size: 12px; font-family: 'Segoe UI'; }"
-            "QPushButton:hover { background: #323A4D; color: #FFFFFF; border-color: #64748B; }"
-        )
+        self._btn_copy_diag.setProperty("copied", "false")
+        st = self._btn_copy_diag.style()
+        if st:
+            st.unpolish(self._btn_copy_diag)
+            st.polish(self._btn_copy_diag)
 
     def _repair_config(self):
         try:
             self.config.load()
             from config import DEFAULTS
+
             repaired = 0
             for k, v in DEFAULTS.items():
                 if k not in self.config._data:
@@ -2970,7 +3244,7 @@ class SettingsWindow(QWidget):
             self.config.add_custom_hand(key, name, filename)
             asset = self.overlay.add_custom_hand(key, dest) if self.overlay else None
             if self.hud and hasattr(self.hud, "add_custom_hand"):
-                col = asset.default_ink if asset else QColor(C_ACCENT)
+                col = asset.default_ink if asset else QColor(CURRENT_THEME["c_accent"])
                 self.hud.add_custom_hand(key, name, col)
             self._refresh_custom_hands()
             self._rebuild_pointer_grid()
@@ -3060,33 +3334,22 @@ class SettingsWindow(QWidget):
     ) -> QWidget:
         row = QWidget()
         row.setObjectName("CustomUploadRow")
-        row.setStyleSheet(
-            f"#CustomUploadRow {{ background: {C_CONTROL_BG}; "
-            "border: 1px solid #333A48; border-radius: 7px; }"
-        )
+        row.setAttribute(Qt.WidgetAttribute.WA_StyledBackground, True)
         hl = QHBoxLayout(row)
         hl.setContentsMargins(10, 6, 8, 6)
         hl.setSpacing(8)
-        hl.addWidget(_label(name, 12, C_TEXT, bold=True))
+        hl.addWidget(_label(name, 12, "text", bold=True))
         hl.addStretch()
 
         use_btn = QPushButton("Use")
+        use_btn.setProperty("role", "btnUse")
         use_btn.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
-        use_btn.setStyleSheet(
-            f"QPushButton {{ background: #1E3A8A; color: #93C5FD; "
-            "border: 1px solid #3B82F6; border-radius: 5px; padding: 3px 10px; font-size: 11px; font-weight: 600; }\n"
-            f"QPushButton:hover {{ background: {CURRENT_THEME['c_accent']}; color: #FFFFFF; }}"
-        )
         use_btn.clicked.connect(on_use)
         hl.addWidget(use_btn)
 
         rm_btn = QPushButton("Remove")
+        rm_btn.setProperty("role", "btnRemove")
         rm_btn.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
-        rm_btn.setStyleSheet(
-            f"QPushButton {{ background: transparent; color: {CURRENT_THEME['c_danger']}; border: none; "
-            "padding: 3px 6px; font-size: 11px; font-weight: 500; }\n"
-            f"QPushButton:hover {{ color: {CURRENT_THEME['c_text']}; }}"
-        )
         rm_btn.clicked.connect(on_remove)
         hl.addWidget(rm_btn)
         return row
@@ -3105,21 +3368,7 @@ class SettingsWindow(QWidget):
             self._size_slider.setValue(2)
             self._set_ink("match", "#3B82F6")
             self._on_sound_tile("boop")
-
-    @staticmethod
-    def _combo_qss() -> str:
-        bd = CURRENT_THEME["c_border"]
-        hbd = CURRENT_THEME["c_border_light"]
-        return (
-            f"QComboBox {{ background: {CURRENT_THEME['c_control_bg']}; color: {CURRENT_THEME['c_text']}; "
-            f"border: 1px solid {bd}; border-radius: 7px; "
-            "padding: 4px 10px; font-size: 12px; font-family: 'Segoe UI'; }\n"
-            f"QComboBox:hover {{ border-color: {hbd}; }}\n"
-            "QComboBox::drop-down { border: none; width: 20px; }\n"
-            f"QComboBox QAbstractItemView {{ background: {CURRENT_THEME['c_control_bg']}; color: {CURRENT_THEME['c_text']}; "
-            f"border: 1px solid {bd}; "
-            f"selection-background-color: {CURRENT_THEME['c_accent']}; selection-color: #FFFFFF; }}"
-        )
+            self.apply_theme(self.config.get("theme_mode", "dark"), persist=True)
 
     def mousePressEvent(self, event):
         if event.button() == Qt.MouseButton.LeftButton and event.position().y() <= 48:

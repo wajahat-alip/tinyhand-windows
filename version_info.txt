@@ -1,0 +1,40 @@
+# UTF-8
+#
+# Windows PE Version Resource for TinyHandWindows.exe
+# Reduces antivirus / SmartScreen false positives by declaring explicit metadata.
+#
+VSVersionInfo(
+  ffi=FixedFileInfo(
+    filevers=(1, 0, 0, 0),
+    prodvers=(1, 0, 0, 0),
+    mask=0x3F,
+    flags=0x0,
+    OS=0x40004,
+    fileType=0x1,
+    subtype=0x0,
+    date=(0, 0),
+  ),
+  kids=[
+    StringFileInfo(
+      [
+        StringTable(
+          "040904B0",
+          [
+            StringStruct("CompanyName", "TinyHand Windows Open Source"),
+            StringStruct(
+              "FileDescription",
+              "TinyHand Windows - Hardware-Accelerated Presentation Pointer & Ink Studio",
+            ),
+            StringStruct("FileVersion", "1.0.0.0"),
+            StringStruct("InternalName", "TinyHandWindows"),
+            StringStruct("LegalCopyright", "MIT License (c) 2026 TinyHand Windows"),
+            StringStruct("OriginalFilename", "TinyHandWindows.exe"),
+            StringStruct("ProductName", "TinyHand Windows"),
+            StringStruct("ProductVersion", "1.0.0.0"),
+          ],
+        )
+      ]
+    ),
+    VarFileInfo([VarStruct("Translation", [1033, 1200])]),
+  ],
+)
