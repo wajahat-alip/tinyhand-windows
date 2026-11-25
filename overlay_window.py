@@ -6,7 +6,9 @@ Uses 60fps QCursor.pos() + GetAsyncKeyState polling with delta-time kinematics
 and zero low-level mouse hooks.
 """
 
+import atexit
 import ctypes
+from ctypes import wintypes
 import glob
 import math
 import os
@@ -31,7 +33,7 @@ from PyQt6.QtWidgets import QWidget
 from hand_engine import CustomFunnyPointers, HandAsset
 from ink_engine import InkEngine
 
-# Windows API constants for permanently click-through layered overlay
+# Windows API constants for permanently click-through layered overlay & cursor control
 user32 = ctypes.windll.user32
 GWL_EXSTYLE = -20
 WS_EX_TRANSPARENT = 0x00000020
@@ -40,6 +42,55 @@ WS_EX_TOOLWINDOW = 0x00000080
 WS_EX_TOPMOST = 0x00000008
 WS_EX_NOACTIVATE = 0x08000000
 VK_LBUTTON = 0x01
+SPI_SETCURSORS = 0x0057
+
+# Standard Win32 system cursor IDs to suppress while the 3D overlay pointer is active
+_OCR_IDS = (
+    32512,  # OCR_NORMAL (Arrow)
+    32513,  # OCR_IBEAM
+    32514,  # OCR_WAIT
+    32515,  # OCR_CROSS
+    32516,  # OCR_UP
+    32642,  # OCR_SIZENWSE
+    32643,  # OCR_SIZENESW
+    32644,  # OCR_SIZEWE
+    32645,  # OCR_SIZENS
+    32646,  # OCR_SIZEALL
+    32648,  # OCR_NO
+    32649,  # OCR_HAND
+    32650,  # OCR_APPSTARTING
+)
+
+# Explicit 64-bit Win32 function prototypes to prevent HCURSOR truncation
+user32.CreateCursor.argtypes = [
+    wintypes.HINSTANCE, ctypes.c_int, ctypes.c_int, ctypes.c_int, ctypes.c_int,
+    ctypes.c_void_p, ctypes.c_void_p,
+]
+user32.CreateCursor.restype = ctypes.c_void_p
+user32.CopyIcon.argtypes = [ctypes.c_void_p]
+user32.CopyIcon.restype = ctypes.c_void_p
+user32.SetSystemCursor.argtypes = [ctypes.c_void_p, wintypes.DWORD]
+user32.SetSystemCursor.restype = wintypes.BOOL
+user32.DestroyCursor.argtypes = [ctypes.c_void_p]
+user32.DestroyCursor.restype = wintypes.BOOL
+user32.SystemParametersInfoW.argtypes = [wintypes.UINT, wintypes.UINT, ctypes.c_void_p, wintypes.UINT]
+user32.SystemParametersInfoW.restype = wintypes.BOOL
+
+_OS_CURSOR_SUPPRESSED = False
+
+
+def _restore_os_cursors_global():
+    """Always restore default Windows system cursors on exit."""
+    global _OS_CURSOR_SUPPRESSED
+    if _OS_CURSOR_SUPPRESSED:
+        try:
+            user32.SystemParametersInfoW(SPI_SETCURSORS, 0, None, 0)
+        except Exception:
+            pass
+        _OS_CURSOR_SUPPRESSED = False
+
+
+atexit.register(_restore_os_cursors_global)
 
 
 class ClickRipple:
@@ -144,6 +195,9 @@ class OverlayWindow(QWidget):
         self._hold_activated_draw: bool = False
         self.pointer_scale = 1.0
         self.hud_rect_provider: Optional[Callable[[], QRect]] = None
+        self.settings_rect_provider: Optional[Callable[[], Optional[QRect]]] = None
+        self._os_cursor_hidden: bool = False
+        self._blank_hcursor: Optional[int] = None
 
         # Cursor & kinematics state
         self.hand_assets: Dict[str, HandAsset] = {}
@@ -191,11 +245,27 @@ class OverlayWindow(QWidget):
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground, True)
         self.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents, True)
         self.setAttribute(Qt.WidgetAttribute.WA_ShowWithoutActivating, True)
+        self.setCursor(QCursor(Qt.CursorShape.BlankCursor))
         self._enforce_click_through()
 
     def showEvent(self, event):
         super().showEvent(event)
         self._enforce_click_through()
+        self.sync_cursor_visibility()
+
+    def hideEvent(self, event):
+        self.restore_system_cursor()
+        super().hideEvent(event)
+
+    def closeEvent(self, event):
+        self.restore_system_cursor()
+        if self._blank_hcursor:
+            try:
+                user32.DestroyCursor(self._blank_hcursor)
+            except Exception:
+                pass
+            self._blank_hcursor = None
+        super().closeEvent(event)
 
     def _enforce_click_through(self):
         hwnd = int(self.winId())
@@ -278,9 +348,63 @@ class OverlayWindow(QWidget):
         if self.hud_rect_provider is None:
             return False
         try:
-            return self.hud_rect_provider().contains(global_pos)
+            rect = self.hud_rect_provider()
+            return bool(rect and rect.contains(global_pos))
         except Exception:
             return False
+
+    def _is_over_settings(self, global_pos) -> bool:
+        if self.settings_rect_provider is None:
+            return False
+        try:
+            rect = self.settings_rect_provider()
+            return bool(rect and rect.contains(global_pos))
+        except Exception:
+            return False
+
+    def _ensure_blank_cursor(self) -> Optional[int]:
+        if self._blank_hcursor is None:
+            and_mask = (ctypes.c_ubyte * 128)(*([0xFF] * 128))
+            xor_mask = (ctypes.c_ubyte * 128)(*([0x00] * 128))
+            self._blank_hcursor = user32.CreateCursor(None, 0, 0, 32, 32, and_mask, xor_mask)
+        return self._blank_hcursor
+
+    def _set_os_cursor_hidden(self, hide: bool):
+        global _OS_CURSOR_SUPPRESSED
+        if hide == self._os_cursor_hidden:
+            return
+        if hide:
+            self.setCursor(QCursor(Qt.CursorShape.BlankCursor))
+            h_blank = self._ensure_blank_cursor()
+            if h_blank:
+                for ocr_id in _OCR_IDS:
+                    h_copy = user32.CopyIcon(h_blank)
+                    if h_copy:
+                        user32.SetSystemCursor(h_copy, ocr_id)
+                _OS_CURSOR_SUPPRESSED = True
+                self._os_cursor_hidden = True
+        else:
+            self.restore_system_cursor()
+
+    def restore_system_cursor(self):
+        """Restore standard Windows OS cursor immediately."""
+        global _OS_CURSOR_SUPPRESSED
+        if self._os_cursor_hidden or _OS_CURSOR_SUPPRESSED:
+            try:
+                user32.SystemParametersInfoW(SPI_SETCURSORS, 0, None, 0)
+            except Exception:
+                pass
+            _OS_CURSOR_SUPPRESSED = False
+            self._os_cursor_hidden = False
+        self.unsetCursor()
+
+    def sync_cursor_visibility(self, global_pos=None):
+        """Hide system cursor whenever 3D hand is active outside TinyHand UI controls."""
+        if global_pos is None:
+            global_pos = QCursor.pos()
+        over_ui = self._is_over_hud(global_pos) or self._is_over_settings(global_pos)
+        should_hide = self.isVisible() and self.pointer_visible and not over_ui
+        self._set_os_cursor_hidden(should_hide)
 
     def _on_mouse_down_event(self, global_pos, local_pt: QPointF):
         self.is_mouse_down = True
@@ -312,6 +436,7 @@ class OverlayWindow(QWidget):
 
         # 1. Exact 1:1 cursor tracking mapped to overlay coordinates
         global_pos = QCursor.pos()
+        self.sync_cursor_visibility(global_pos)
         local_pos = self.mapFromGlobal(global_pos)
         new_cursor = QPointF(float(local_pos.x()), float(local_pos.y()))
         cursor_moved = (

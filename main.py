@@ -169,6 +169,11 @@ def main():
         config, overlay, hud, sound_engine, overlay.ink_engine, input_hook=hook
     )
     hud.on_hud_changed = settings_win.sync_from_hud
+    overlay.settings_rect_provider = (
+        lambda: settings_win.geometry()
+        if (settings_win.isVisible() and not settings_win.isMinimized())
+        else None
+    )
 
     def open_settings():
         settings_win.sync_from_hud()
@@ -182,6 +187,7 @@ def main():
     def toggle_pointer():
         overlay.pointer_visible = not overlay.pointer_visible
         hud.set_pointer_active(overlay.pointer_visible)
+        overlay.sync_cursor_visibility()
         overlay.update()
 
     def on_esc():
@@ -198,6 +204,7 @@ def main():
     hook.start()
 
     app.aboutToQuit.connect(hook.stop)
+    app.aboutToQuit.connect(overlay.restore_system_cursor)
 
     def _save_state():
         pos = hud.pos()

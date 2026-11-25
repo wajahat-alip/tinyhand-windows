@@ -450,11 +450,34 @@ def build_root_stylesheet(t: Dict[str, Any]) -> str:
         color: {t['c_text']};
         border-color: {t['c_border_light']};
     }}
-    QPushButton[role="btnDefault"][copied="true"] {{
-        background: {t['success_bg']};
-        color: {t['success_fg']};
-        border: 1px solid {t['c_success']};
+    QPushButton[role="btnRepair"] {{
+        background: {t['c_control_bg']};
+        color: {t['c_text']};
+        border: 1px solid {t['c_border']};
+        border-radius: 7px;
+        padding: 9px 24px;
         font-weight: 600;
+        font-size: 12px;
+        font-family: 'Segoe UI', sans-serif;
+    }}
+    QPushButton[role="btnRepair"]:hover {{
+        background: {t['c_surface_hover']};
+        color: {t['c_text']};
+        border-color: {t['c_border_light']};
+    }}
+    QPushButton[role="linkBtn"] {{
+        background: transparent;
+        color: {t['c_accent_light'] if t['mode'] == 'dark' else t['c_accent']};
+        border: none;
+        padding: 0px;
+        font-size: 12px;
+        font-weight: 600;
+        font-family: 'Segoe UI', sans-serif;
+        text-align: right;
+    }}
+    QPushButton[role="linkBtn"]:hover {{
+        color: {t['c_accent_hover'] if t['mode'] == 'light' else '#93C5FD'};
+        text-decoration: underline;
     }}
     QPushButton[role="btnPrimary"] {{
         background: {t['c_accent']};
@@ -1999,6 +2022,11 @@ class SettingsWindow(QWidget):
         # Update preview action icons
         self._refresh_preview_icons()
 
+        # Update Official Website link icon
+        if hasattr(self, "_btn_website"):
+            link_col = theme["c_accent_light"] if mode == "dark" else theme["c_accent"]
+            self._btn_website.setIcon(make_svg_icon("globe", link_col, 13))
+
         # Update custom painted tiles & thumbnails
         for thumb in self._pointer_thumbs:
             thumb.update_theme()
@@ -2755,30 +2783,21 @@ class SettingsWindow(QWidget):
 
         vbox.addWidget(_section_label("Diagnostics & Bug Troubleshooting"))
         diag_body = QVBoxLayout()
-        diag_body.setSpacing(8)
+        diag_body.setSpacing(10)
 
         diag_body.addWidget(
-            _label("Encountering an issue or click behavior glitch? Use these tools to repair or report.", 11, muted=True)
+            _label("Encountering an issue or click behavior glitch? Use this tool to repair or report.", 11, muted=True)
         )
 
         diag_btns_row = QHBoxLayout()
-        diag_btns_row.setSpacing(8)
-
-        self._btn_copy_diag = _button("Copy System Diagnostics")
-        self._btn_copy_diag.setProperty("copied", "false")
-        self._btn_copy_diag.setToolTip("Copies OS, Python, DPI, and pointer config to clipboard for bug reports.")
-        self._btn_copy_diag.clicked.connect(self._copy_diagnostic_info)
-        diag_btns_row.addWidget(self._btn_copy_diag)
+        diag_btns_row.setContentsMargins(0, 6, 0, 6)
+        diag_btns_row.addStretch()
 
         self._btn_repair_cfg = _button("Verify && Repair Config")
+        self._btn_repair_cfg.setProperty("role", "btnRepair")
         self._btn_repair_cfg.setToolTip("Validates and repairs missing config keys without losing custom uploads.")
         self._btn_repair_cfg.clicked.connect(self._repair_config)
         diag_btns_row.addWidget(self._btn_repair_cfg)
-
-        self._btn_open_appdata = _button("Open AppData Folder")
-        self._btn_open_appdata.setToolTip("Opens %LOCALAPPDATA%\\TinyHandWindows\\ where config and custom assets are stored.")
-        self._btn_open_appdata.clicked.connect(self._open_appdata_folder)
-        diag_btns_row.addWidget(self._btn_open_appdata)
 
         diag_btns_row.addStretch()
         diag_body.addLayout(diag_btns_row)
@@ -2799,6 +2818,22 @@ class SettingsWindow(QWidget):
         vbox.addWidget(_section_label("Specifications & Credits"))
         info_body = QVBoxLayout()
         info_body.setSpacing(6)
+
+        website_row = QHBoxLayout()
+        website_row.addWidget(_label("Official Website", 12, "textSec"))
+        website_row.addStretch()
+        self._btn_website = QPushButton("https://wajahat-alip.github.io/tinyhand-windows/")
+        self._btn_website.setProperty("role", "linkBtn")
+        self._btn_website.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
+        self._btn_website.setIconSize(QSize(13, 13))
+        self._btn_website.setToolTip("Open TinyHand Windows official website")
+        self._btn_website.clicked.connect(
+            lambda: QDesktopServices.openUrl(QUrl("https://wajahat-alip.github.io/tinyhand-windows/"))
+        )
+        website_row.addWidget(self._btn_website)
+        info_body.addLayout(website_row)
+        _add_hsep(info_body)
+
         for k, v in [
             ("Platform", "Windows 10 & 11 (64-bit Desktop)"),
             ("Rendering Engine", "PyQt6 Layered Transparent Overlay (Win32)"),
@@ -2905,49 +2940,6 @@ class SettingsWindow(QWidget):
         url = str(self._last_update_info.get("release_url") or "https://github.com/wajahat-alip/tinyhand-windows/releases")
         QDesktopServices.openUrl(QUrl(url))
 
-    def _gather_diagnostic_info(self) -> str:
-        import platform
-
-        screen = QGuiApplication.primaryScreen()
-        scr_geom = screen.geometry() if screen else None
-        dpr = screen.devicePixelRatio() if screen else 1.0
-
-        info = [
-            "### TinyHand Windows — Diagnostic Report",
-            f"- **App Version**: {APP_VERSION}",
-            f"- **OS**: Windows {platform.platform()} ({platform.architecture()[0]})",
-            f"- **Python**: {platform.python_version()}",
-            f"- **Screen Resolution**: {scr_geom.width()}x{scr_geom.height()} @ {dpr:.1f}x DPI" if scr_geom else "- **Screen**: Unknown",
-            f"- **Active Pointer**: {self.config.get('pointer_style', 'coral')} (Scale: {self.config.get('pointer_scale', 2)})",
-            f"- **Drawing Mode**: Smooth={self.config.get('smooth_lines', False)} (Strength={self.config.get('smooth_strength', 5)})",
-            f"- **Config Path**: {os.path.join(self.app_dir, 'config.json')}",
-            f"- **Custom Hands Loaded**: {len(self.config.get('custom_hands', []))}",
-            f"- **Custom Sounds Loaded**: {len(self.config.get('custom_sounds', []))}",
-        ]
-        return "\n".join(info)
-
-    def _copy_diagnostic_info(self):
-        info = self._gather_diagnostic_info()
-        clipboard = QGuiApplication.clipboard()
-        if clipboard:
-            clipboard.setText(info)
-            old_txt = self._btn_copy_diag.text()
-            self._btn_copy_diag.setText("Copied to Clipboard!")
-            self._btn_copy_diag.setProperty("copied", "true")
-            st = self._btn_copy_diag.style()
-            if st:
-                st.unpolish(self._btn_copy_diag)
-                st.polish(self._btn_copy_diag)
-            QTimer.singleShot(2500, lambda: self._restore_copy_diag_btn(old_txt))
-
-    def _restore_copy_diag_btn(self, old_txt: str):
-        self._btn_copy_diag.setText(old_txt)
-        self._btn_copy_diag.setProperty("copied", "false")
-        st = self._btn_copy_diag.style()
-        if st:
-            st.unpolish(self._btn_copy_diag)
-            st.polish(self._btn_copy_diag)
-
     def _repair_config(self):
         try:
             self.config.load()
@@ -2966,12 +2958,6 @@ class SettingsWindow(QWidget):
             )
         except Exception as e:
             QMessageBox.warning(self, "Repair Warning", f"Could not verify config: {e}")
-
-    def _open_appdata_folder(self):
-        if os.path.exists(self.app_dir):
-            os.startfile(self.app_dir)
-        else:
-            QMessageBox.information(self, "AppData Folder", f"Data path:\n{self.app_dir}")
 
     def _report_bug(self):
         QDesktopServices.openUrl(QUrl("https://github.com/wajahat-alip/tinyhand-windows/issues/new"))
