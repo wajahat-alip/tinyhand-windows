@@ -5,6 +5,7 @@ Coordinates the click-through overlay, frosted-glass HUD capsule,
 dark settings window, sound engine, keyboard hotkeys, and Windows system tray.
 """
 
+import ctypes
 import os
 import sys
 from PyQt6.QtGui import QAction, QColor
@@ -12,7 +13,7 @@ from PyQt6.QtWidgets import QApplication, QMenu, QSystemTrayIcon
 
 from config import Config, get_data_dir, get_resource_dir
 from hud_bar import TinyHandHUD
-from icons import make_svg_icon, make_tray_icon
+from icons import make_app_icon, make_svg_icon
 from input_hook import InputHook
 from overlay_window import OverlayWindow
 from settings_window import SIZE_SCALES, SettingsWindow
@@ -122,9 +123,18 @@ def _sync_hud_from_config(config: Config, overlay: OverlayWindow, hud: TinyHandH
 
 
 def main():
+    if sys.platform == "win32":
+        try:
+            ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(
+                "Wajahat.TinyHandWindows.App.1"
+            )
+        except Exception:
+            pass
+
     app = QApplication(sys.argv)
     app.setApplicationName("TinyHand Windows")
-    app.setWindowIcon(make_tray_icon())
+    app_icon = make_app_icon()
+    app.setWindowIcon(app_icon)
     app.setQuitOnLastWindowClosed(False)
 
     resource_dir = get_resource_dir()
@@ -215,7 +225,7 @@ def main():
     app.aboutToQuit.connect(_save_state)
 
     # 6. Windows System Tray Integration
-    tray = QSystemTrayIcon(make_tray_icon(), app)
+    tray = QSystemTrayIcon(app_icon, app)
     tray.setToolTip("TinyHand Windows")
 
     tray_menu = QMenu()

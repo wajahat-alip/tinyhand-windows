@@ -4,9 +4,12 @@ Vector SVG Icon Helpers for TinyHand Pro (Windows Edition).
 Generates crisp, DPI-aware QIcon instances with zero raw emoji dependencies.
 """
 
+import os
 from PyQt6.QtCore import QByteArray, QRectF, Qt
 from PyQt6.QtGui import QColor, QIcon, QPainter, QPainterPath, QPixmap
 from PyQt6.QtSvg import QSvgRenderer
+
+from config import get_resource_dir
 
 
 _SVG_TEMPLATES = {
@@ -195,29 +198,76 @@ def make_color_dot_icon(color: QColor, size: int = 10) -> QIcon:
     return QIcon(pixmap)
 
 
-def make_tray_icon() -> QIcon:
-    """Generate a crisp vector hand badge for the Windows system tray."""
-    size = 32
-    scale = 2
-    px = size * scale
+def get_app_icon_path(filename: str = "app_icon.png") -> str:
+    """Resolve asset icon path cleanly in both local runs and frozen PyInstaller (_MEIPASS)."""
+    return os.path.join(get_resource_dir(), "assets", filename)
+
+
+def make_app_icon_pixmap(size: int = 24) -> QPixmap:
+    """Load assets/app_icon.png smoothly at 2x DPI for sharp titlebar & About visuals."""
+    dpr = 2
+    px = size * dpr
+    for fname in ("app_icon.png", "app_icon.ico"):
+        path = get_app_icon_path(fname)
+        if os.path.exists(path):
+            src = QPixmap(path)
+            if not src.isNull():
+                scaled = src.scaled(
+                    px,
+                    px,
+                    Qt.AspectRatioMode.KeepAspectRatio,
+                    Qt.TransformationMode.SmoothTransformation,
+                )
+                scaled.setDevicePixelRatio(dpr)
+                return scaled
+
+    # Fallback vector badge if asset missing
     pixmap = QPixmap(px, px)
     pixmap.fill(Qt.GlobalColor.transparent)
-
     painter = QPainter(pixmap)
     painter.setRenderHint(QPainter.RenderHint.Antialiasing, True)
-
     painter.setBrush(QColor("#2563EB"))
-    painter.setPen(QColor(147, 197, 253, 180))
-    painter.drawEllipse(QRectF(2 * scale, 2 * scale, (size - 4) * scale, (size - 4) * scale))
-
+    painter.setPen(Qt.PenStyle.NoPen)
+    painter.drawRoundedRect(QRectF(0, 0, px, px), 6 * dpr, 6 * dpr)
     svg_bytes = _SVG_TEMPLATES["hand"].format(color="#FFFFFF").encode("utf-8")
     renderer = QSvgRenderer(QByteArray(svg_bytes))
-    pad = 7 * scale
+    pad = 4 * dpr
     renderer.render(painter, QRectF(pad, pad, px - 2 * pad, px - 2 * pad))
     painter.end()
+    pixmap.setDevicePixelRatio(dpr)
+    return pixmap
 
-    pixmap.setDevicePixelRatio(scale)
-    return QIcon(pixmap)
+
+def make_app_icon() -> QIcon:
+    """Build a multi-resolution QIcon from assets/app_icon.png for window, taskbar & tray."""
+    icon = QIcon()
+    png_path = get_app_icon_path("app_icon.png")
+    if os.path.exists(png_path):
+        src = QPixmap(png_path)
+        if not src.isNull():
+            for sz in (16, 24, 32, 48, 64, 128, 256):
+                scaled = src.scaled(
+                    sz,
+                    sz,
+                    Qt.AspectRatioMode.KeepAspectRatio,
+                    Qt.TransformationMode.SmoothTransformation,
+                )
+                icon.addPixmap(scaled)
+            return icon
+
+    ico_path = get_app_icon_path("app_icon.ico")
+    if os.path.exists(ico_path):
+        ico = QIcon(ico_path)
+        if not ico.isNull():
+            return ico
+
+    icon.addPixmap(make_app_icon_pixmap(32))
+    return icon
+
+
+def make_tray_icon() -> QIcon:
+    """Return the glossy TinyHand Windows application icon for the system tray."""
+    return make_app_icon()
 
 
 def make_sidebar_badge_pixmap(

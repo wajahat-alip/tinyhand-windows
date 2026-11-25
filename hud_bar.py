@@ -21,7 +21,7 @@ from PyQt6.QtWidgets import (
 )
 
 from hand_engine import HAND_CATALOG
-from icons import make_color_dot_icon, make_svg_icon
+from icons import make_app_icon, make_color_dot_icon, make_svg_icon
 
 
 class StatusDot(QWidget):
@@ -106,6 +106,7 @@ class TinyHandHUD(QWidget):
             | Qt.WindowType.Tool
         )
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground, True)
+        self.setWindowIcon(make_app_icon())
 
         self._setup_ui()
         self._position_initial()
@@ -270,8 +271,8 @@ class TinyHandHUD(QWidget):
         # Collapsed Orb Button (hidden initially)
         self.btn_expand = QPushButton()
         self.btn_expand.setFixedSize(44, 44)
-        self.btn_expand.setIcon(make_svg_icon("hand", "#93C5FD", 20))
-        self.btn_expand.setIconSize(QSize(20, 20))
+        self.btn_expand.setIcon(make_app_icon())
+        self.btn_expand.setIconSize(QSize(26, 26))
         self.btn_expand.setToolTip("Expand TinyHand HUD")
         self.btn_expand.setStyleSheet("""
             QPushButton {

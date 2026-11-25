@@ -67,7 +67,7 @@ from PyQt6.QtWidgets import (
 
 from config import APP_NAME, APP_VERSION
 from hand_engine import HAND_CATALOG, CustomFunnyPointers, HandAsset
-from icons import make_sidebar_badge_pixmap, make_svg_icon
+from icons import make_app_icon, make_app_icon_pixmap, make_sidebar_badge_pixmap, make_svg_icon
 from ink_engine import InkEngine
 from overlay_window import ClickRipple, ComicBubble
 
@@ -325,8 +325,8 @@ def build_root_stylesheet(t: Dict[str, Any]) -> str:
         border-top-right-radius: 13px;
     }}
     #TitleBadge {{
-        background: {t['c_accent']};
-        border-radius: 6px;
+        background: transparent;
+        border: none;
     }}
     #TitleLabel {{
         color: {t['c_text']};
@@ -361,8 +361,8 @@ def build_root_stylesheet(t: Dict[str, Any]) -> str:
         border-radius: 9px;
     }}
     #AboutHeroBadge {{
-        background: {t['c_accent']};
-        border-radius: 16px;
+        background: transparent;
+        border: none;
     }}
     #UpdateResultFrame {{
         background: {t['c_control_bg']};
@@ -1920,6 +1920,7 @@ class SettingsWindow(QWidget):
             | Qt.WindowType.WindowStaysOnTopHint
         )
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground, True)
+        self.setWindowIcon(make_app_icon())
 
         self._enable_windows_blur()
         self._build_ui()
@@ -2100,10 +2101,9 @@ class SettingsWindow(QWidget):
 
         badge = QLabel()
         badge.setObjectName("TitleBadge")
-        badge.setAttribute(Qt.WidgetAttribute.WA_StyledBackground, True)
         badge.setFixedSize(24, 24)
         badge.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        badge.setPixmap(make_svg_icon("hand", "#FFFFFF", 13).pixmap(QSize(13, 13)))
+        badge.setPixmap(make_app_icon_pixmap(24))
         hl.addWidget(badge, 0, Qt.AlignmentFlag.AlignVCenter)
 
         self._title_lbl = QLabel("TinyHand Windows")
@@ -2713,10 +2713,9 @@ class SettingsWindow(QWidget):
 
         icon_badge = QLabel()
         icon_badge.setObjectName("AboutHeroBadge")
-        icon_badge.setAttribute(Qt.WidgetAttribute.WA_StyledBackground, True)
-        icon_badge.setFixedSize(60, 60)
+        icon_badge.setFixedSize(64, 64)
         icon_badge.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        icon_badge.setPixmap(make_svg_icon("hand", "#FFFFFF", 32).pixmap(QSize(32, 32)))
+        icon_badge.setPixmap(make_app_icon_pixmap(64))
         hero_body.addWidget(icon_badge, 0, Qt.AlignmentFlag.AlignHCenter)
 
         title = _label("TinyHand Windows", 20, "pageTitle", bold=True)
