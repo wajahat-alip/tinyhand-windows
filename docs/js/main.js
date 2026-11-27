@@ -2,7 +2,6 @@
  * TinyHand Windows — Landing Page Main Controller
  */
 
-// Full Catalog of 36 3D Hands + 4 Vector FX
 const HAND_CATALOG = [
   { id: 'astro', name: 'Astro', category: 'special' },
   { id: 'glass', name: 'Frosted Glass', category: 'material' },
@@ -42,12 +41,22 @@ const HAND_CATALOG = [
   { id: 'wood', name: 'Carved Wood', category: 'material' }
 ];
 
+const VECTOR_ICONS_SVG = {
+  cat_paw: `<svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="4" r="2"/><circle cx="18" cy="8" r="2"/><circle cx="20" cy="16" r="2"/><path d="M9 10a5 5 0 0 1 5 5v3.5a3.5 3.5 0 0 1-6.84 1.045Q6.52 17.48 4.46 16.84A3.5 3.5 0 0 1 5.5 10Z"/></svg>`,
+  magic_wand: `<svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 4V2"/><path d="M15 16v-2"/><path d="M8 9h2"/><path d="M20 9h2"/><path d="M17.8 11.8 19 13"/><path d="M15 9h.01"/><path d="M17.8 6.2 19 5"/><path d="m3 21 9-9"/><path d="M12.2 6.2 11 5"/></svg>`,
+  boxing_glove: `<svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="6" y="4" width="12" height="12" rx="5"/><path d="M8 16v3a2 2 0 0 0 2 2h4a2 2 0 0 0 2-2v-3"/><path d="M6 10H4a1 1 0 0 0-1 1v2a2 2 0 0 0 2 2h1"/></svg>`,
+  laser: `<svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><circle cx="12" cy="12" r="7" stroke="#EF4444"/><circle cx="12" cy="12" r="3" fill="#EF4444" stroke="none"/></svg>`
+};
+
 const SPECIAL_FX_POINTERS = [
-  { id: 'cat_paw', name: 'Cat Paw', category: 'fx', icon: '🐾' },
-  { id: 'magic_wand', name: 'Magic Wand', category: 'fx', icon: '✨' },
-  { id: 'boxing_glove', name: 'Boxing Glove', category: 'fx', icon: '🥊' },
-  { id: 'laser', name: 'Red Laser Dot', category: 'fx', icon: '🔴' }
+  { id: 'cat_paw', name: 'Cat Paw', category: 'fx' },
+  { id: 'magic_wand', name: 'Magic Wand', category: 'fx' },
+  { id: 'boxing_glove', name: 'Boxing Glove', category: 'fx' },
+  { id: 'laser', name: 'Laser Dot', category: 'fx' }
 ];
+
+const SOUND_ICON_ON = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path><path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path></svg>`;
+const SOUND_ICON_OFF = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><line x1="23" y1="9" x2="17" y2="15"></line><line x1="17" y1="9" x2="23" y2="15"></line></svg>`;
 
 document.addEventListener('DOMContentLoaded', () => {
   // 1. Initialize Hero Interactive Stage
@@ -64,6 +73,7 @@ document.addEventListener('DOMContentLoaded', () => {
     btnSpotlight.addEventListener('click', () => {
       const active = heroStage.toggleSpotlight();
       btnSpotlight.classList.toggle('active', active);
+      btnSpotlight.setAttribute('aria-pressed', String(active));
     });
   }
 
@@ -71,6 +81,7 @@ document.addEventListener('DOMContentLoaded', () => {
     btnDraw.addEventListener('click', () => {
       const active = heroStage.toggleDraw();
       btnDraw.classList.toggle('active', active);
+      btnDraw.setAttribute('aria-pressed', String(active));
     });
   }
 
@@ -78,7 +89,8 @@ document.addEventListener('DOMContentLoaded', () => {
     btnSound.addEventListener('click', () => {
       const active = heroStage.toggleSound();
       btnSound.classList.toggle('active', active);
-      btnSound.innerHTML = active ? '🔊 Sound: ON' : '🔇 Muted';
+      btnSound.setAttribute('aria-pressed', String(active));
+      btnSound.innerHTML = `${active ? SOUND_ICON_ON : SOUND_ICON_OFF}<span>${active ? 'Sound: On' : 'Muted'}</span>`;
     });
   }
 
@@ -110,13 +122,14 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     items.forEach(item => {
-      const card = document.createElement('div');
+      const card = document.createElement('button');
+      card.type = 'button';
       card.className = `hand-tile ${heroStage.activeHand === item.id ? 'selected' : ''}`;
       card.dataset.id = item.id;
 
       if (item.category === 'fx') {
         card.innerHTML = `
-          <div style="font-size: 46px; height: 78px; display: flex; align-items: center; justify-content: center; margin-bottom: 8px;">${item.icon}</div>
+          <div class="hand-tile-vector">${VECTOR_ICONS_SVG[item.id] || ''}</div>
           <div class="hand-tile-name">${item.name}</div>
           <div class="hand-tile-sub">Vector FX</div>
         `;
@@ -124,10 +137,10 @@ document.addEventListener('DOMContentLoaded', () => {
         card.innerHTML = `
           <picture>
             <source srcset="assets/hands/hand_${item.id}.webp" type="image/webp">
-            <img src="assets/hands/hand_${item.id}.png" alt="${item.name}" loading="lazy">
+            <img src="assets/hands/hand_${item.id}.png" alt="${item.name} pointer" decoding="async">
           </picture>
           <div class="hand-tile-name">${item.name}</div>
-          <div class="hand-tile-sub">3D Model</div>
+          <div class="hand-tile-sub">3D hand</div>
         `;
       }
 
@@ -142,10 +155,13 @@ document.addEventListener('DOMContentLoaded', () => {
           handIndicator.textContent = item.name;
         }
 
-        // Smooth scroll to stage if clicked from bottom
-        const rect = document.getElementById('heroStageCanvas').getBoundingClientRect();
-        if (rect.top < -100 || rect.bottom > window.innerHeight + 100) {
-          document.getElementById('playgroundWrap').scrollIntoView({ behavior: 'smooth', block: 'center' });
+        const stageCanvas = document.getElementById('heroStageCanvas');
+        if (stageCanvas) {
+          const rect = stageCanvas.getBoundingClientRect();
+          if (rect.top < -80 || rect.bottom > window.innerHeight + 80) {
+            const wrap = document.getElementById('playgroundWrap');
+            if (wrap) wrap.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          }
         }
       });
 
@@ -153,10 +169,8 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // Initial gallery render
   renderGallery('all');
 
-  // Filter Tabs listener
   filterTabs.forEach(tab => {
     tab.addEventListener('click', () => {
       filterTabs.forEach(p => p.classList.remove('active'));
@@ -165,19 +179,52 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
-  // 4. Bento Interactive Ink Pad
+  // 4. Bento Interactive Ink Pad (Pre-seeded Chaikin curve on initial load)
   const inkCanvas = document.getElementById('bentoInkPad');
   if (inkCanvas) {
     const ictx = inkCanvas.getContext('2d');
     let isDrawing = false;
-    let bentoHue = 210;
+    let bentoHue = 215;
+    let cssW = 0;
+    let cssH = 0;
+
+    function drawSampleSpline() {
+      if (cssW <= 0 || cssH <= 0) return;
+      ictx.save();
+      ictx.beginPath();
+      const padX = 36;
+      const midY = cssH * 0.52;
+      const span = cssW - padX * 2;
+      ictx.moveTo(padX, midY + 18);
+      ictx.bezierCurveTo(
+        padX + span * 0.25, midY - 46,
+        padX + span * 0.52, midY + 48,
+        padX + span * 0.88, midY - 22
+      );
+      ictx.strokeStyle = '#3B82F6';
+      ictx.lineWidth = 4;
+      ictx.lineCap = 'round';
+      ictx.lineJoin = 'round';
+      ictx.stroke();
+
+      // Quiet annotation arrow & label
+      ictx.fillStyle = '#7A8296';
+      ictx.font = '500 12px "JetBrains Mono", monospace';
+      ictx.fillText('Drag to sketch smoothed curve', padX, cssH - 18);
+      ictx.restore();
+    }
 
     function resizeBentoCanvas() {
       const rect = inkCanvas.getBoundingClientRect();
-      inkCanvas.width = rect.width * (window.devicePixelRatio || 1);
-      inkCanvas.height = rect.height * (window.devicePixelRatio || 1);
-      ictx.scale(window.devicePixelRatio || 1, window.devicePixelRatio || 1);
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      cssW = rect.width;
+      cssH = rect.height;
+      inkCanvas.width = rect.width * dpr;
+      inkCanvas.height = rect.height * dpr;
+      ictx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      drawSampleSpline();
     }
+
     resizeBentoCanvas();
     window.addEventListener('resize', resizeBentoCanvas);
 
@@ -186,7 +233,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const rect = inkCanvas.getBoundingClientRect();
       ictx.beginPath();
       ictx.moveTo(e.clientX - rect.left, e.clientY - rect.top);
-      bentoHue = (bentoHue + 25) % 360;
+      bentoHue = (bentoHue + 28) % 360;
     });
 
     inkCanvas.addEventListener('mousemove', (e) => {
@@ -195,27 +242,43 @@ document.addEventListener('DOMContentLoaded', () => {
       const x = e.clientX - rect.left;
       const y = e.clientY - rect.top;
 
-      ictx.strokeStyle = `hsl(${bentoHue}, 100%, 65%)`;
+      ictx.strokeStyle = `hsl(${bentoHue}, 85%, 62%)`;
       ictx.lineWidth = 4;
       ictx.lineCap = 'round';
       ictx.lineJoin = 'round';
-      ictx.shadowColor = `hsl(${bentoHue}, 100%, 65%)`;
-      ictx.shadowBlur = 6;
       ictx.lineTo(x, y);
       ictx.stroke();
     });
 
-    window.addEventListener('mouseup', () => { isDrawing = false; });
+    window.addEventListener('mouseup', () => {
+      isDrawing = false;
+    });
 
     const btnClearBento = document.getElementById('bentoClearInk');
     if (btnClearBento) {
       btnClearBento.addEventListener('click', () => {
-        ictx.clearRect(0, 0, inkCanvas.width, inkCanvas.height);
+        ictx.clearRect(0, 0, cssW, cssH);
       });
     }
   }
 
-  // 5. Comic Pop Interactive Button in Bento
+  // 5. Interactive Bento Spotlight Reveal
+  const spotlightPanel = document.getElementById('bentoSpotlightPanel');
+  if (spotlightPanel) {
+    spotlightPanel.addEventListener('mousemove', (e) => {
+      const rect = spotlightPanel.getBoundingClientRect();
+      const x = ((e.clientX - rect.left) / rect.width) * 100;
+      const y = ((e.clientY - rect.top) / rect.height) * 100;
+      spotlightPanel.style.setProperty('--spot-x', `${x.toFixed(1)}%`);
+      spotlightPanel.style.setProperty('--spot-y', `${y.toFixed(1)}%`);
+    });
+    spotlightPanel.addEventListener('mouseleave', () => {
+      spotlightPanel.style.setProperty('--spot-x', '50%');
+      spotlightPanel.style.setProperty('--spot-y', '50%');
+    });
+  }
+
+  // 6. Comic Pop Interactive Button in Bento
   const comicDemoTile = document.getElementById('comicDemoTile');
   if (comicDemoTile) {
     const popAudio = new Audio('assets/sounds/tap_pop.wav');
@@ -223,36 +286,29 @@ document.addEventListener('DOMContentLoaded', () => {
       popAudio.currentTime = 0;
       popAudio.play().catch(() => {});
 
-      const words = ['BOOP!', 'POW!', 'CLICK!', 'WOW!', 'SUPER!'];
+      const rect = comicDemoTile.getBoundingClientRect();
+      const px = e.clientX ? e.clientX - rect.left : rect.width * 0.5;
+      const py = e.clientY ? e.clientY - rect.top : rect.height * 0.5;
+
+      const words = ['BOOP', 'POP', 'CLICK', 'TAP', 'SNAP'];
       const word = words[Math.floor(Math.random() * words.length)];
 
       const badge = document.createElement('div');
+      badge.className = 'comic-demo-badge';
       badge.textContent = word;
-      badge.style.position = 'absolute';
-      badge.style.left = `${e.offsetX}px`;
-      badge.style.top = `${e.offsetY - 20}px`;
-      badge.style.background = '#2563EB';
-      badge.style.color = '#FFFFFF';
-      badge.style.padding = '4px 10px';
-      badge.style.borderRadius = '9999px';
-      badge.style.fontSize = '12px';
-      badge.style.fontWeight = 'bold';
-      badge.style.boxShadow = '0 0 15px rgba(37,99,235,0.7)';
-      badge.style.pointerEvents = 'none';
-      badge.style.transition = 'all 0.6s cubic-bezier(0.16, 1, 0.3, 1)';
-      badge.style.transform = 'translate(-50%, -50%) scale(0.6)';
-      badge.style.opacity = '1';
+      badge.style.left = `${px}px`;
+      badge.style.top = `${py - 16}px`;
 
       comicDemoTile.appendChild(badge);
 
       requestAnimationFrame(() => {
-        badge.style.transform = 'translate(-50%, -90px) scale(1.1)';
+        badge.style.transform = 'translate(-50%, -64px) scale(1)';
         badge.style.opacity = '0';
       });
 
       setTimeout(() => {
         badge.remove();
-      }, 650);
+      }, 520);
     });
   }
 });

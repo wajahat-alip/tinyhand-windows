@@ -11,7 +11,7 @@ class InteractivePointerStage {
 
     // State
     this.activeHand = 'astro';
-    this.activeSize = 'M'; // XS, S, M, L, XL
+    this.activeSize = 'M';
     this.isSpotlight = false;
     this.isDrawing = false;
     this.isSound = true;
@@ -28,7 +28,8 @@ class InteractivePointerStage {
     this.bubbles = [];
     this.inkPaths = [];
     this.currentStroke = null;
-    this.rainbowHue = 0;
+    this.hasCustomInk = false;
+    this.rainbowHue = 215;
 
     // Audio Pool
     this.audioPool = {};
@@ -54,9 +55,15 @@ class InteractivePointerStage {
     window.addEventListener('resize', this.resize);
     this.resize();
 
-    // Default center position
-    this.target = { x: this.canvas.width * 0.5, y: this.canvas.height * 0.45 };
+    // Rest pointer cleanly above/right of slide underline so Panel 2 copy stays unobstructed
+    this.target = {
+      x: this.displayWidth * 0.64,
+      y: this.displayHeight * 0.30
+    };
     this.current = { ...this.target };
+
+    // Seed one subtle Chaikin-style sample annotation stroke on initial load
+    this.seedSampleInk();
 
     this.canvas.addEventListener('mousemove', this.onMouseMove);
     this.canvas.addEventListener('mousedown', this.onMouseDown);
@@ -64,7 +71,6 @@ class InteractivePointerStage {
     this.canvas.addEventListener('mouseenter', this.onMouseEnter);
     this.canvas.addEventListener('mouseleave', this.onMouseLeave);
 
-    // Touch support for mobile/tablet
     this.canvas.addEventListener('touchmove', (e) => {
       e.preventDefault();
       const rect = this.canvas.getBoundingClientRect();
@@ -85,20 +91,56 @@ class InteractivePointerStage {
     requestAnimationFrame(this.loop);
   }
 
+  seedSampleInk() {
+    const w = this.displayWidth || 960;
+    const h = this.displayHeight || 396;
+    const isNarrow = w < 560;
+    const sw = Math.min(w - (isNarrow ? 24 : 48), 660);
+    const sh = isNarrow ? Math.min(h - 116, 224) : Math.min(h - 104, 260);
+    const sx = (w - sw) / 2;
+    const sy = isNarrow ? 16 : (h - sh) / 2 - 14;
+
+    // Crisp cobalt underline highlight below slide headline
+    const yBase = isNarrow ? sy + 72 : sy + 82;
+    const xStart = sx + (isNarrow ? 16 : 24);
+    const xEnd = isNarrow ? sx + Math.min(sw - 32, 160) : sx + Math.min(272, sw * 0.44);
+    const pts = [];
+    const steps = 10;
+    for (let i = 0; i <= steps; i++) {
+      const t = i / steps;
+      pts.push({
+        x: xStart + (xEnd - xStart) * t,
+        y: yBase + Math.sin(t * Math.PI) * 3
+      });
+    }
+    this.inkPaths = [{ color: '#3B82F6', points: pts }];
+  }
+
   resize() {
     const rect = this.canvas.getBoundingClientRect();
-    const dpr = window.devicePixelRatio || 1;
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
     this.canvas.width = rect.width * dpr;
     this.canvas.height = rect.height * dpr;
-    this.ctx.scale(dpr, dpr);
+    this.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     this.displayWidth = rect.width;
     this.displayHeight = rect.height;
 
-    // Anchor rod to bottom-right quadrant
     this.rodAnchor = {
-      x: this.displayWidth * 0.85,
+      x: this.displayWidth * 0.84,
       y: this.displayHeight + 40
     };
+
+    if (!this.isInside) {
+      this.target = {
+        x: this.displayWidth * 0.64,
+        y: this.displayHeight * 0.30
+      };
+      this.current = { ...this.target };
+    }
+
+    if (!this.hasCustomInk && this.inkPaths.length > 0) {
+      this.seedSampleInk();
+    }
   }
 
   initAudio() {
@@ -120,13 +162,12 @@ class InteractivePointerStage {
         audio.currentTime = 0;
         audio.play().catch(() => {});
       }
-    } catch(e) {}
+    } catch (e) {}
   }
 
   loadHandImage(name) {
     if (this.handImages[name]) return;
     const img = new Image();
-    // Try webp first, fallback to png
     img.src = `assets/hands/hand_${name}.webp`;
     img.onerror = () => {
       img.src = `assets/hands/hand_${name}.png`;
@@ -185,9 +226,10 @@ class InteractivePointerStage {
     this.triggerTap(x, y);
 
     if (this.isDrawing) {
+      this.hasCustomInk = true;
       this.rainbowHue = (this.rainbowHue + 40) % 360;
       this.currentStroke = {
-        color: `hsl(${this.rainbowHue}, 100%, 65%)`,
+        color: `hsl(${this.rainbowHue}, 88%, 62%)`,
         points: [{ x, y }]
       };
       this.inkPaths.push(this.currentStroke);
@@ -199,44 +241,40 @@ class InteractivePointerStage {
   }
 
   triggerTap(x, y) {
-    // Sound
     this.playTapSound();
 
-    // Click Ripple
     this.ripples.push({
       x,
       y,
       radius: 5,
-      maxRadius: 45,
-      alpha: 0.9
+      maxRadius: 44,
+      alpha: 0.85
     });
 
-    // Comic Pop Bubble
-    const words = ['BOOP!', 'POP!', 'POW!', 'CLICK!', 'WOW!', 'SNAP!'];
+    const words = ['BOOP', 'POP', 'TAP', 'CLICK', 'SNAP'];
     const word = words[Math.floor(Math.random() * words.length)];
     this.bubbles.push({
       x,
-      y: y - 25,
+      y: y - 24,
       word,
       alpha: 1,
-      scale: 0.7,
-      vy: -1.2
+      scale: 0.78,
+      vy: -1.1
     });
   }
 
   getHandScaleFactor() {
-    switch(this.activeSize) {
+    switch (this.activeSize) {
       case 'XS': return 0.55;
-      case 'S':  return 0.70;
-      case 'M':  return 0.88;
-      case 'L':  return 1.10;
+      case 'S': return 0.70;
+      case 'M': return 0.86;
+      case 'L': return 1.10;
       case 'XL': return 1.35;
-      default:   return 0.88;
+      default: return 0.86;
     }
   }
 
   loop() {
-    // Smooth kinematic easing
     const ease = 0.22;
     this.current.x += (this.target.x - this.current.x) * ease;
     this.current.y += (this.target.y - this.current.y) * ease;
@@ -247,140 +285,136 @@ class InteractivePointerStage {
 
     ctx.clearRect(0, 0, w, h);
 
-    // 0. Render Presentation Slide Mockup
     this.renderSlideMockup(ctx, w, h);
-
-    // 1. Draw Inks
     this.renderInk(ctx);
 
-    // 2. Draw Spotlight Backdrop if active
     if (this.isSpotlight) {
       this.renderSpotlight(ctx, w, h);
     }
 
-    // 3. Draw Ripples
     this.renderRipples(ctx);
-
-    // 4. Draw Telescopic Rod & Hand
     this.renderPointer(ctx);
-
-    // 5. Draw Comic Pop Bubbles
     this.renderBubbles(ctx);
 
     requestAnimationFrame(this.loop);
   }
 
   renderSlideMockup(ctx, w, h) {
-    const sw = Math.min(w - 60, 660);
-    const sh = Math.min(h - 100, 310);
+    const isNarrow = w < 560;
+    const sw = Math.min(w - (isNarrow ? 24 : 48), 660);
+    const sh = isNarrow ? Math.min(h - 116, 224) : Math.min(h - 104, 260);
     const sx = (w - sw) / 2;
-    const sy = (h - sh) / 2 - 15;
+    const sy = isNarrow ? 16 : (h - sh) / 2 - 14;
+    const pad = isNarrow ? 16 : 24;
 
     ctx.save();
 
-    // Slide Card Ground
-    ctx.fillStyle = '#0F131D';
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.08)';
+    // Slide Card Surface
+    ctx.fillStyle = '#0E1118';
+    ctx.strokeStyle = 'rgba(238, 240, 245, 0.10)';
     ctx.lineWidth = 1;
     ctx.beginPath();
-    ctx.roundRect(sx, sy, sw, sh, 14);
+    ctx.roundRect(sx, sy, sw, sh, 12);
     ctx.fill();
     ctx.stroke();
 
-    // Slide Header Bar
-    ctx.fillStyle = '#141A26';
+    // Clip slide internals cleanly so narrow viewports never bleed outside frame
+    ctx.save();
     ctx.beginPath();
-    ctx.roundRect(sx, sy, sw, 42, [14, 14, 0, 0]);
-    ctx.fill();
+    ctx.roundRect(sx, sy, sw, sh, 12);
+    ctx.clip();
 
-    // Slide Header Title
-    ctx.fillStyle = '#94A3B8';
+    // Slide Top Header Bar
+    ctx.fillStyle = '#141822';
+    ctx.fillRect(sx, sy, sw, 34);
+
+    ctx.fillStyle = '#7A8296';
     ctx.font = '500 12px "JetBrains Mono", monospace';
     ctx.textAlign = 'left';
-    ctx.fillText('SLIDE 01 // ARCHITECTURE & KINEMATICS', sx + 18, sy + 26);
+    ctx.fillText(isNarrow ? 'Slide 01 · Win32 preview' : 'Slide 01 · Kinematics & overlay preview', sx + pad, sy + 21);
 
-    // Slide Headline
-    ctx.fillStyle = '#FFFFFF';
-    ctx.font = '700 20px "Familjen Grotesk", sans-serif';
-    ctx.fillText('Zero-Lag Win32 Presentation Pointer', sx + 22, sy + 80);
+    ctx.fillStyle = '#EEF0F5';
+    ctx.font = isNarrow ? '500 17px "Familjen Grotesk", sans-serif' : '500 20px "Familjen Grotesk", sans-serif';
+    ctx.fillText(isNarrow ? 'Zero-lag 3D pointer' : 'Zero-lag Win32 presentation pointer', sx + pad, sy + (isNarrow ? 60 : 66));
 
-    // Slide Subtitle
-    ctx.fillStyle = '#64748B';
-    ctx.font = '400 13px "Inter", sans-serif';
-    ctx.fillText('Move the 3D hand cursor across elements. Click anywhere to test tactile pop feedback.', sx + 22, sy + 104);
+    ctx.fillStyle = '#A3A9B8';
+    ctx.font = isNarrow ? '400 12px "Inter", sans-serif' : '400 13px "Inter", sans-serif';
+    ctx.fillText(
+      isNarrow ? 'Steer hand or click to test sound & ink.' : 'Steer the 3D hand across elements or click to test sound and ink.',
+      sx + pad,
+      sy + (isNarrow ? 92 : 100)
+    );
 
-    // Two Demo Metric Panels inside Slide
-    const pw = (sw - 60) / 2;
-    const ph = 120;
-    const py = sy + 130;
+    // Two clean content cards inside slide
+    const gap = isNarrow ? 10 : 16;
+    const pw = (sw - pad * 2 - gap) / 2;
+    const ph = isNarrow ? 92 : 104;
+    const py = sy + (isNarrow ? 114 : 122);
 
-    // Panel 1: Hand Tracking
-    const p1x = sx + 20;
-    ctx.fillStyle = '#141824';
-    ctx.strokeStyle = 'rgba(37, 99, 235, 0.25)';
+    // Panel 1
+    const p1x = sx + pad;
+    ctx.fillStyle = '#11141C';
+    ctx.strokeStyle = 'rgba(238, 240, 245, 0.10)';
     ctx.beginPath();
-    ctx.roundRect(p1x, py, pw, ph, 10);
+    ctx.roundRect(p1x, py, pw, ph, 8);
     ctx.fill();
     ctx.stroke();
 
     ctx.fillStyle = '#60A5FA';
-    ctx.font = '600 12px "JetBrains Mono", monospace';
-    ctx.fillText('FEATURE // 01', p1x + 14, py + 26);
+    ctx.font = '500 11.5px "JetBrains Mono", monospace';
+    ctx.fillText('01 · Pointers', p1x + 12, py + 24);
 
-    ctx.fillStyle = '#FFFFFF';
-    ctx.font = '700 15px "Familjen Grotesk", sans-serif';
-    ctx.fillText('36 3D Tactile Hands', p1x + 14, py + 52);
+    ctx.fillStyle = '#EEF0F5';
+    ctx.font = isNarrow ? '500 13px "Familjen Grotesk", sans-serif' : '500 15px "Familjen Grotesk", sans-serif';
+    ctx.fillText(isNarrow ? '36 3D hands' : '36 sculpted 3D hands', p1x + 12, py + 48);
 
-    ctx.fillStyle = '#94A3B8';
-    ctx.font = '400 12px "Inter", sans-serif';
-    ctx.fillText('Sub-pixel 60 FPS tracking', p1x + 14, py + 74);
-    ctx.fillText('Click to switch styles below', p1x + 14, py + 94);
+    ctx.fillStyle = '#7A8296';
+    ctx.font = '400 11.5px "Inter", sans-serif';
+    ctx.fillText(isNarrow ? 'Pick style below' : 'Pick any hand style in the grid below', p1x + 12, py + 70);
 
-    // Panel 2: Click Test Target
-    const p2x = sx + 40 + pw;
-    ctx.fillStyle = '#141824';
-    ctx.strokeStyle = 'rgba(16, 185, 129, 0.25)';
+    // Panel 2
+    const p2x = p1x + pw + gap;
+    ctx.fillStyle = '#11141C';
+    ctx.strokeStyle = 'rgba(238, 240, 245, 0.10)';
     ctx.beginPath();
-    ctx.roundRect(p2x, py, pw, ph, 10);
+    ctx.roundRect(p2x, py, pw, ph, 8);
     ctx.fill();
     ctx.stroke();
 
-    ctx.fillStyle = '#10B981';
-    ctx.font = '600 12px "JetBrains Mono", monospace';
-    ctx.fillText('INTERACTIVE TARGET', p2x + 14, py + 26);
+    ctx.fillStyle = '#4CC38A';
+    ctx.font = '500 11.5px "JetBrains Mono", monospace';
+    ctx.fillText('02 · Tap target', p2x + 12, py + 24);
 
-    ctx.fillStyle = '#FFFFFF';
-    ctx.font = '700 15px "Familjen Grotesk", sans-serif';
-    ctx.fillText('Click Me for Sound FX', p2x + 14, py + 52);
+    ctx.fillStyle = '#EEF0F5';
+    ctx.font = isNarrow ? '500 13px "Familjen Grotesk", sans-serif' : '500 15px "Familjen Grotesk", sans-serif';
+    ctx.fillText(isNarrow ? 'Sound & pop' : 'Click for sound and pop', p2x + 12, py + 48);
 
-    ctx.fillStyle = '#94A3B8';
-    ctx.font = '400 12px "Inter", sans-serif';
-    ctx.fillText('Triggers BOOP & POP bubbles', p2x + 14, py + 74);
-    ctx.fillText('Plays acoustic WAV tap', p2x + 14, py + 94);
+    ctx.fillStyle = '#7A8296';
+    ctx.font = '400 11.5px "Inter", sans-serif';
+    ctx.fillText(isNarrow ? 'WAV + ripple ring' : 'Plays acoustic WAV + ripple ring', p2x + 12, py + 70);
 
+    ctx.restore();
     ctx.restore();
   }
 
   renderSpotlight(ctx, w, h) {
-    const radius = 110;
+    const radius = 104;
     const cx = this.current.x;
     const cy = this.current.y;
 
     ctx.save();
-    // Dark vignette
-    const grad = ctx.createRadialGradient(cx, cy, radius * 0.4, cx, cy, radius);
+    const grad = ctx.createRadialGradient(cx, cy, radius * 0.45, cx, cy, radius);
     grad.addColorStop(0, 'rgba(0, 0, 0, 0)');
-    grad.addColorStop(0.7, 'rgba(5, 7, 12, 0.55)');
-    grad.addColorStop(1, 'rgba(5, 7, 12, 0.85)');
+    grad.addColorStop(0.75, 'rgba(7, 8, 13, 0.58)');
+    grad.addColorStop(1, 'rgba(7, 8, 13, 0.86)');
 
     ctx.fillStyle = grad;
     ctx.fillRect(0, 0, w, h);
 
-    // Golden spotlight ring
     ctx.beginPath();
     ctx.arc(cx, cy, radius, 0, Math.PI * 2);
-    ctx.strokeStyle = 'rgba(59, 130, 246, 0.35)';
-    ctx.lineWidth = 2;
+    ctx.strokeStyle = 'rgba(96, 165, 250, 0.45)';
+    ctx.lineWidth = 1.5;
     ctx.stroke();
 
     ctx.restore();
@@ -406,9 +440,7 @@ class InteractivePointerStage {
       }
 
       ctx.strokeStyle = stroke.color;
-      ctx.lineWidth = 5;
-      ctx.shadowColor = stroke.color;
-      ctx.shadowBlur = 8;
+      ctx.lineWidth = 4;
       ctx.stroke();
     }
     ctx.restore();
@@ -428,8 +460,8 @@ class InteractivePointerStage {
       ctx.save();
       ctx.beginPath();
       ctx.arc(r.x, r.y, r.radius, 0, Math.PI * 2);
-      ctx.strokeStyle = `rgba(59, 130, 246, ${r.alpha})`;
-      ctx.lineWidth = 2.5;
+      ctx.strokeStyle = `rgba(96, 165, 250, ${r.alpha})`;
+      ctx.lineWidth = 2;
       ctx.stroke();
       ctx.restore();
     }
@@ -440,7 +472,7 @@ class InteractivePointerStage {
       const b = this.bubbles[i];
       b.y += b.vy;
       b.scale = Math.min(1.0, b.scale + 0.04);
-      b.alpha -= 0.02;
+      b.alpha -= 0.022;
 
       if (b.alpha <= 0) {
         this.bubbles.splice(i, 1);
@@ -451,25 +483,17 @@ class InteractivePointerStage {
       ctx.translate(b.x, b.y);
       ctx.scale(b.scale, b.scale);
 
-      // Bubble Capsule
-      ctx.font = 'bold 12px "Inter", sans-serif';
+      ctx.font = '500 12px "JetBrains Mono", monospace';
       const textWidth = ctx.measureText(b.word).width;
-      const padX = 10;
-      const padY = 5;
-      const bw = textWidth + padX * 2;
+      const bw = textWidth + 16;
       const bh = 22;
 
-      ctx.fillStyle = `rgba(37, 99, 235, ${b.alpha * 0.95})`;
-      ctx.shadowColor = 'rgba(59, 130, 246, 0.5)';
-      ctx.shadowBlur = 10;
-
-      // Rounded rect
+      ctx.fillStyle = `rgba(37, 99, 235, ${b.alpha})`;
       ctx.beginPath();
-      ctx.roundRect(-bw / 2, -bh / 2, bw, bh, 10);
+      ctx.roundRect(-bw / 2, -bh / 2, bw, bh, 6);
       ctx.fill();
 
-      // Text
-      ctx.fillStyle = `rgba(255, 255, 255, ${b.alpha})`;
+      ctx.fillStyle = `rgba(248, 250, 252, ${b.alpha})`;
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
       ctx.fillText(b.word, 0, 0);
@@ -489,26 +513,23 @@ class InteractivePointerStage {
     const angle = Math.atan2(dy, dx);
     const scale = this.getHandScaleFactor();
 
-    // Telescopic Rod
     ctx.save();
 
-    // Rod Shadow
     if (this.hasShadow) {
       ctx.beginPath();
-      ctx.moveTo(anchorX + 8, anchorY + 8);
-      ctx.lineTo(tipX + 8, tipY + 8);
-      ctx.strokeStyle = 'rgba(0, 0, 0, 0.4)';
-      ctx.lineWidth = 14 * scale;
+      ctx.moveTo(anchorX + 6, anchorY + 6);
+      ctx.lineTo(tipX + 6, tipY + 6);
+      ctx.strokeStyle = 'rgba(0, 0, 0, 0.45)';
+      ctx.lineWidth = 12 * scale;
       ctx.lineCap = 'round';
       ctx.stroke();
     }
 
-    // Rod Body (Dark Metal Gradient)
     const rodGrad = ctx.createLinearGradient(
-      anchorX - Math.sin(angle) * 7,
-      anchorY + Math.cos(angle) * 7,
-      anchorX + Math.sin(angle) * 7,
-      anchorY - Math.cos(angle) * 7
+      anchorX - Math.sin(angle) * 6,
+      anchorY + Math.cos(angle) * 6,
+      anchorX + Math.sin(angle) * 6,
+      anchorY - Math.cos(angle) * 6
     );
     rodGrad.addColorStop(0, '#1C212B');
     rodGrad.addColorStop(0.5, '#353D4E');
@@ -518,25 +539,23 @@ class InteractivePointerStage {
     ctx.moveTo(anchorX, anchorY);
     ctx.lineTo(tipX, tipY);
     ctx.strokeStyle = rodGrad;
-    ctx.lineWidth = 12 * scale;
+    ctx.lineWidth = 11 * scale;
     ctx.lineCap = 'round';
     ctx.stroke();
 
-    // Chrome Collar at connection tip
     ctx.beginPath();
-    const collarX = tipX - Math.cos(angle) * (18 * scale);
-    const collarY = tipY - Math.sin(angle) * (18 * scale);
-    ctx.arc(collarX, collarY, 7 * scale, 0, Math.PI * 2);
+    const collarX = tipX - Math.cos(angle) * (16 * scale);
+    const collarY = tipY - Math.sin(angle) * (16 * scale);
+    ctx.arc(collarX, collarY, 6 * scale, 0, Math.PI * 2);
     ctx.fillStyle = '#64748B';
     ctx.fill();
 
     ctx.restore();
 
-    // Render Hand Artwork or Special Vector Pointer
     if (this.activeHand === 'cat_paw') {
       this.renderCatPaw(ctx, tipX, tipY, angle, scale);
     } else if (this.activeHand === 'magic_wand') {
-      this.renderMagicWand(ctx, tipX, tipY, angle, scale);
+      this.renderMagicWand(ctx, tipX, tipY, scale);
     } else if (this.activeHand === 'boxing_glove') {
       this.renderBoxingGlove(ctx, tipX, tipY, angle, scale);
     } else if (this.activeHand === 'laser') {
@@ -552,22 +571,18 @@ class InteractivePointerStage {
 
     ctx.save();
     ctx.translate(tipX, tipY);
-    // Align hand along rod angle
     ctx.rotate(angle + Math.PI / 2);
 
-    const baseSize = 85 * scale;
+    const baseSize = 84 * scale;
 
-    // Drop shadow
     if (this.hasShadow) {
-      ctx.shadowColor = 'rgba(0, 0, 0, 0.55)';
-      ctx.shadowBlur = 14;
-      ctx.shadowOffsetX = 6;
-      ctx.shadowOffsetY = 10;
+      ctx.shadowColor = 'rgba(0, 0, 0, 0.5)';
+      ctx.shadowBlur = 12;
+      ctx.shadowOffsetX = 4;
+      ctx.shadowOffsetY = 8;
     }
 
-    // Draw hand with tip centered at (0, 0)
     ctx.drawImage(img, -baseSize * 0.45, -baseSize * 0.08, baseSize, baseSize);
-
     ctx.restore();
   }
 
@@ -575,25 +590,20 @@ class InteractivePointerStage {
     ctx.save();
     ctx.translate(x, y);
     ctx.rotate(angle + Math.PI / 2);
-    const s = 1.3 * scale;
+    const s = 1.25 * scale;
     ctx.scale(s, s);
 
-    // Fur Pad
-    ctx.fillStyle = '#FFFFFF';
-    ctx.shadowColor = 'rgba(0,0,0,0.3)';
-    ctx.shadowBlur = 8;
+    ctx.fillStyle = '#EEF0F5';
     ctx.beginPath();
     ctx.ellipse(0, 10, 18, 16, 0, 0, Math.PI * 2);
     ctx.fill();
 
-    // Pink Toe Pads
     ctx.fillStyle = '#F472B6';
     ctx.beginPath();
     ctx.ellipse(0, 13, 9, 7, 0, 0, Math.PI * 2);
     ctx.fill();
 
-    const toes = [-10, -4, 4, 10];
-    toes.forEach(tx => {
+    [-10, -4, 4, 10].forEach(tx => {
       ctx.beginPath();
       ctx.arc(tx, 0, 3.5, 0, Math.PI * 2);
       ctx.fill();
@@ -602,20 +612,18 @@ class InteractivePointerStage {
     ctx.restore();
   }
 
-  renderMagicWand(ctx, x, y, angle, scale) {
+  renderMagicWand(ctx, x, y, scale) {
     ctx.save();
     ctx.translate(x, y);
-    // Glowing star tip
-    ctx.fillStyle = '#FBBF24';
-    ctx.shadowColor = '#F59E0B';
-    ctx.shadowBlur = 18;
+
+    ctx.fillStyle = '#38BDF8';
     ctx.beginPath();
-    ctx.arc(0, 0, 9 * scale, 0, Math.PI * 2);
+    ctx.arc(0, 0, 8 * scale, 0, Math.PI * 2);
     ctx.fill();
 
-    ctx.fillStyle = '#FFFFFF';
+    ctx.fillStyle = '#F8FAFC';
     ctx.beginPath();
-    ctx.arc(0, 0, 4 * scale, 0, Math.PI * 2);
+    ctx.arc(0, 0, 3.5 * scale, 0, Math.PI * 2);
     ctx.fill();
     ctx.restore();
   }
@@ -624,11 +632,9 @@ class InteractivePointerStage {
     ctx.save();
     ctx.translate(x, y);
     ctx.rotate(angle + Math.PI / 2);
-    ctx.fillStyle = '#EF4444';
-    ctx.shadowColor = 'rgba(0,0,0,0.4)';
-    ctx.shadowBlur = 10;
+    ctx.fillStyle = '#DC2626';
     ctx.beginPath();
-    ctx.roundRect(-16 * scale, -10 * scale, 32 * scale, 36 * scale, 14 * scale);
+    ctx.roundRect(-16 * scale, -10 * scale, 32 * scale, 36 * scale, 12 * scale);
     ctx.fill();
     ctx.restore();
   }
@@ -636,13 +642,11 @@ class InteractivePointerStage {
   renderLaser(ctx, x, y) {
     ctx.save();
     ctx.fillStyle = '#EF4444';
-    ctx.shadowColor = '#F87171';
-    ctx.shadowBlur = 20;
     ctx.beginPath();
     ctx.arc(x, y, 7, 0, Math.PI * 2);
     ctx.fill();
 
-    ctx.fillStyle = '#FFFFFF';
+    ctx.fillStyle = '#F8FAFC';
     ctx.beginPath();
     ctx.arc(x, y, 3, 0, Math.PI * 2);
     ctx.fill();

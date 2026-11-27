@@ -3,11 +3,11 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  
+
   <!-- Primary Meta Tags -->
-  <title>TinyHand Windows — Native Presentation Pointer & Screen Drawing for Windows</title>
-  <meta name="title" content="TinyHand Windows — Native Presentation Pointer & Screen Drawing for Windows">
-  <meta name="description" content="The presentation pointer Windows was missing. 36 tactile 3D hands, Chaikin curve line stabilization, cinema spotlight, and comic tap bubbles. Free & open source for Windows 10 & 11.">
+  <title>TinyHand Windows — 3D Presentation Pointer &amp; Screen Ink</title>
+  <meta name="title" content="TinyHand Windows — 3D Presentation Pointer &amp; Screen Ink">
+  <meta name="description" content="Portable Windows 10 and 11 presentation pointer with 36 sculpted 3D hands, Chaikin curve drawing, and spotlight focus. Free and open source.">
   <meta name="keywords" content="tinyhand, presentation pointer, screen drawing, windows pointer, cursor highlight, presentation overlay, zoom presentation tool, 3D hand cursor">
   <meta name="author" content="Wajahat Ali">
   <link rel="canonical" href="https://wajahat-alip.github.io/tinyhand-windows/">
@@ -16,14 +16,14 @@
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://wajahat-alip.github.io/tinyhand-windows/">
   <meta property="og:title" content="TinyHand Windows — 3D Presentation Pointer for Windows">
-  <meta property="og:description" content="Bring life to your demos and screencasts. 36 3D tactile hands, smooth vector drawing, cinema spotlight, and comic tap bubbles.">
+  <meta property="og:description" content="36 tactile 3D hands, stabilized screen drawing, and spotlight focus for Windows 10 and 11.">
   <meta property="og:image" content="https://wajahat-alip.github.io/tinyhand-windows/assets/hands/hand_astro.png">
 
   <!-- Twitter Cards -->
   <meta property="twitter:card" content="summary_large_image">
   <meta property="twitter:url" content="https://wajahat-alip.github.io/tinyhand-windows/">
   <meta property="twitter:title" content="TinyHand Windows — 3D Presentation Pointer for Windows">
-  <meta property="twitter:description" content="The presentation pointer Windows was missing. 36 3D tactile hands, smooth vector drawing, and cinema spotlight.">
+  <meta property="twitter:description" content="36 tactile 3D hands, stabilized screen drawing, and spotlight focus for Windows 10 and 11.">
   <meta property="twitter:image" content="https://wajahat-alip.github.io/tinyhand-windows/assets/hands/hand_astro.png">
 
   <!-- Favicon -->
@@ -33,7 +33,7 @@
   <!-- Stylesheet -->
   <link rel="stylesheet" href="css/style.css">
 
-  <!-- JSON-LD Structured Data for Google SEO -->
+  <!-- JSON-LD Structured Data -->
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
@@ -59,16 +59,11 @@
 </head>
 <body>
 
-  <!-- Background Motion Graphics Canvas -->
-  <canvas id="bgCanvas"></canvas>
-
-  <!-- Floating Navigation Pill -->
-  <div class="nav-wrap">
-    <nav class="navbar">
+  <!-- Quiet Navigation Bar -->
+  <header class="site-header">
+    <nav class="navbar container" aria-label="Primary">
       <a href="#" class="brand">
-        <div class="brand-icon">
-          <img src="assets/favicon.png" alt="Logo">
-        </div>
+        <img src="assets/favicon.png" alt="TinyHand Windows" class="brand-mark" width="24" height="24">
         <span class="brand-name">TinyHand Windows</span>
         <span class="brand-version">v1.0.0</span>
       </a>
@@ -77,19 +72,14 @@
         <li><a href="#stageSection">Live Stage</a></li>
         <li><a href="#features">Architecture</a></li>
         <li><a href="#gallery">36 Hands</a></li>
-        <li><a href="#specs">Benchmarks</a></li>
+        <li><a href="#specs">Comparison</a></li>
         <li><a href="#faq">FAQ</a></li>
       </ul>
 
       <div class="nav-actions">
-        <a href="https://github.com/wajahat-alip/tinyhand-windows" target="_blank" rel="noopener" class="btn btn-secondary">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/>
-          </svg>
-          GitHub
-        </a>
-        <a href="https://github.com/wajahat-alip/tinyhand-windows/releases/download/v1.0.0/TinyHandWindows.exe" class="btn btn-keycap-primary">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <a href="https://github.com/wajahat-alip/tinyhand-windows" target="_blank" rel="noopener" class="nav-link-quiet">GitHub</a>
+        <a href="https://github.com/wajahat-alip/tinyhand-windows/releases/download/v1.0.0/TinyHandWindows.exe" class="btn btn-primary btn-sm">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
             <polyline points="7 10 12 15 17 10"></polyline>
             <line x1="12" y1="15" x2="12" y2="3"></line>
@@ -98,386 +88,421 @@
         </a>
       </div>
     </nav>
-  </div>
-
-  <!-- Hero Section -->
-  <header class="hero container" id="stageSection">
-    <!-- Floating 3D Hand Parallax Orbs (Motion Graphics) -->
-    <div class="floating-decor-layer">
-      <img src="assets/hands/hand_astro.webp" alt="" class="floating-decor decor-1" data-depth="1.2">
-      <img src="assets/hands/hand_robot.webp" alt="" class="floating-decor decor-2" data-depth="1.4">
-      <img src="assets/hands/hand_glass.webp" alt="" class="floating-decor decor-3" data-depth="0.9">
-      <img src="assets/hands/hand_cookie.webp" alt="" class="floating-decor decor-4" data-depth="1.1">
-    </div>
-
-    <div class="hero-pill">
-      <span class="pulse-dot"></span>
-      WINDOWS 10 & 11 NATIVE • 100% PORTABLE BINARY
-    </div>
-
-    <h1 class="hero-h1">
-      The Presentation Pointer <br>
-      <span class="gradient">Windows Was Missing.</span>
-    </h1>
-
-    <p class="hero-desc">
-      Make your live demos, screencasts, and meetings unmissable. 36 tactile 3D hands, Chaikin-smoothed vector ink, cinema spotlight, and comic tap bubbles — engineered natively for Windows without system click-lag.
-    </p>
-
-    <div class="hero-cta-row">
-      <a href="https://github.com/wajahat-alip/tinyhand-windows/releases/download/v1.0.0/TinyHandWindows.exe" class="btn btn-keycap-primary btn-aura btn-lg">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-          <polyline points="7 10 12 15 17 10"></polyline>
-          <line x1="12" y1="15" x2="12" y2="3"></line>
-        </svg>
-        Download TinyHandWindows.exe (v1.0.0)
-      </a>
-
-      <a href="https://github.com/wajahat-alip/tinyhand-windows" target="_blank" rel="noopener" class="btn btn-secondary btn-lg">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
-          <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/>
-        </svg>
-        Star on GitHub
-      </a>
-    </div>
-
-    <div class="hero-trust-row">
-      <span>
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
-        Single Portable File (111 MB)
-      </span>
-      <span>
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
-        No Admin Privileges Needed
-      </span>
-      <span>
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
-        100% Free & Open Source (MIT)
-      </span>
-      <span>
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
-        &lt; 0.5% CPU Idle
-      </span>
-    </div>
-
-    <!-- Live Interactive Stage Window -->
-    <div class="stage-wrapper" id="playgroundWrap">
-      <div class="stage-window">
-        <div class="stage-titlebar">
-          <div class="stage-controls">
-            <span class="window-chip chip-close"></span>
-            <span class="window-chip chip-min"></span>
-            <span class="window-chip chip-max"></span>
-          </div>
-
-          <div class="stage-title">
-            <span>LIVE INTERACTIVE STAGE &bull; TELESCOPIC KINEMATICS</span>
-          </div>
-
-          <div class="stage-badge">
-            <div class="audio-wave">
-              <span></span><span></span><span></span><span></span><span></span>
-            </div>
-            <span>60 FPS</span>
-            <span style="color:var(--text-body); margin-left:6px;">Hand: <strong id="stageActiveHandName" style="color:#FFFFFF;">Astro</strong></span>
-          </div>
-        </div>
-
-        <div class="stage-viewport">
-          <div class="stage-hint">Move cursor inside to test telescopic arm &bull; Click to tap sound &amp; comic bubble</div>
-          <canvas id="heroStageCanvas" style="width: 100%; height: 100%; display: block;"></canvas>
-
-          <!-- Stage Floating HUD -->
-          <div class="stage-hud">
-            <button class="hud-btn" id="stageBtnSpotlight">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="3"></circle></svg>
-              Spotlight
-            </button>
-            <button class="hud-btn" id="stageBtnDraw">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 19l7-7 3 3-7 7-3-3z"></path><path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"></path></svg>
-              Draw Ink
-            </button>
-            <button class="hud-btn" id="stageBtnClear">
-              Clear
-            </button>
-            <div class="hud-divider"></div>
-            <button class="hud-btn" id="stageBtnSound">
-              🔊 Sound: ON
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
   </header>
 
-  <!-- Bento Features Section -->
-  <section class="section container" id="features">
-    <div class="section-head">
-      <span class="section-tag">ENGINEERING</span>
-      <h2 class="section-h2">Native Win32 presentation architecture</h2>
-      <p class="section-sub">Eliminates system mouse hook timeouts, provides hardware-accelerated click-through optics, and stabilizes vector ink lines.</p>
-    </div>
+  <main>
+    <!-- Hero + Above-the-Fold Windows 11 Live Interactive Stage -->
+    <section class="hero container" id="stageSection">
+      <div class="hero-header">
+        <h1 class="hero-h1">A 3D presentation pointer built for Windows</h1>
+        <p class="hero-desc">
+          Guide live demos and screencasts with 36 sculpted 3D hands, Chaikin-smoothed ink, and spotlight focus. Portable binary, zero install, and no click-lag.
+        </p>
 
-    <div class="bento-grid">
-      <!-- Bento 1: Chaikin Line Stabilizer (Span 8) -->
-      <div class="bento-card span-8">
-        <div class="bento-chip">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 19l7-7 3 3-7 7-3-3z"></path></svg>
-          Chaikin Spline Algorithm
+        <div class="hero-cta-row">
+          <a href="https://github.com/wajahat-alip/tinyhand-windows/releases/download/v1.0.0/TinyHandWindows.exe" class="btn btn-primary btn-lg">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+              <polyline points="7 10 12 15 17 10"></polyline>
+              <line x1="12" y1="15" x2="12" y2="3"></line>
+            </svg>
+            Download for Windows
+          </a>
+
+          <a href="https://github.com/wajahat-alip/tinyhand-windows" target="_blank" rel="noopener" class="btn btn-secondary btn-lg">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.08-1.25-.27-2.48-1-3.5.28-1.15.28-2.35 0-3.5 0 0-1 0-3 1.5-2.64-.5-5.36-.5-8 0C6 2 5 2 5 2c-.3 1.15-.3 2.35 0 3.5A5.403 5.403 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.39.49-.68 1.05-.85 1.65-.17.6-.22 1.23-.15 1.85v4"></path>
+              <path d="M9 18c-4.51 2-5-2-7-2"></path>
+            </svg>
+            View source
+          </a>
         </div>
-        <h3 class="bento-h3">Organic Ink Stabilizer with Rainbow Spectrum</h3>
-        <p class="bento-p">Underline metrics and sketch live diagrams with zero hand tremor. The built-in Chaikin subdivision engine transforms raw pointer coordinates into velvet-smooth presentation curves.</p>
 
-        <div class="bento-panel">
-          <canvas id="bentoInkPad" style="width: 100%; height: 230px; display: block; cursor: crosshair;"></canvas>
-          <div style="position: absolute; bottom: 12px; right: 12px; display: flex; gap: 8px;">
-            <button class="btn btn-secondary" id="bentoClearInk" style="font-size: 0.78rem; padding: 5px 12px;">Clear Sketch</button>
+        <p class="hero-meta">
+          Portable 112 MB .exe &middot; Windows 10 &amp; 11 (64-bit) &middot; No admin rights &middot; MIT License
+        </p>
+      </div>
+
+      <!-- Authentic Windows 11 Live Interactive Stage -->
+      <div class="stage-wrapper" id="playgroundWrap">
+        <div class="stage-window">
+          <div class="stage-titlebar">
+            <div class="win-titlebar-left">
+              <img src="assets/favicon.png" alt="" width="16" height="16" class="win-titlebar-icon">
+              <span class="win-titlebar-text">TinyHand Windows — Live Stage</span>
+            </div>
+
+            <div class="win-titlebar-meta">
+              <span class="stage-fps">60 fps</span>
+              <span class="meta-sep" aria-hidden="true">&middot;</span>
+              <span class="stage-hand-readout">Pointer: <strong id="stageActiveHandName">Astro</strong></span>
+            </div>
+
+            <!-- Authentic Windows 11 Caption Buttons -->
+            <div class="win11-controls" aria-hidden="true">
+              <span class="win11-btn win11-min">
+                <svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1">
+                  <line x1="1" y1="5" x2="9" y2="5"></line>
+                </svg>
+              </span>
+              <span class="win11-btn win11-max">
+                <svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1">
+                  <rect x="1.5" y="1.5" width="7" height="7" rx="1"></rect>
+                </svg>
+              </span>
+              <span class="win11-btn win11-close">
+                <svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1">
+                  <line x1="1.5" y1="1.5" x2="8.5" y2="8.5"></line>
+                  <line x1="8.5" y1="1.5" x2="1.5" y2="8.5"></line>
+                </svg>
+              </span>
+            </div>
+          </div>
+
+          <div class="stage-viewport">
+            <div class="stage-hint">Move cursor inside to steer telescopic rod &middot; Click for ripple, bubble &amp; sound</div>
+            <canvas id="heroStageCanvas" class="stage-canvas"></canvas>
+
+            <!-- Interactive Stage Floating Control Bar -->
+            <div class="stage-hud" role="toolbar" aria-label="Interactive stage controls">
+              <button type="button" class="hud-btn" id="stageBtnSpotlight">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <circle cx="12" cy="12" r="9"></circle>
+                  <circle cx="12" cy="12" r="3"></circle>
+                </svg>
+                <span>Spotlight</span>
+              </button>
+              <button type="button" class="hud-btn" id="stageBtnDraw">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M12 20h9"></path>
+                  <path d="M16.5 3.5a2.121 2.121 0 1 1 3 3L7 19l-4 1 1-4Z"></path>
+                </svg>
+                <span>Draw ink</span>
+              </button>
+              <button type="button" class="hud-btn" id="stageBtnClear">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="m7 21-4.3-4.3c-1-1-1-2.5 0-3.4l9.6-9.6c1-1 2.5-1 3.4 0l5.6 5.6c1 1 1 2.5 0 3.4L13 21"></path>
+                  <path d="M22 21H7"></path>
+                </svg>
+                <span>Clear</span>
+              </button>
+              <div class="hud-divider" aria-hidden="true"></div>
+              <button type="button" class="hud-btn active" id="stageBtnSound" aria-pressed="true">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+                  <path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+                  <path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path>
+                </svg>
+                <span>Sound: On</span>
+              </button>
+            </div>
           </div>
         </div>
       </div>
+    </section>
 
-      <!-- Bento 2: Cinema Spotlight (Span 4) -->
-      <div class="bento-card span-4">
-        <div class="bento-chip">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="3"></circle></svg>
-          Auditorium Mode
+    <!-- Architecture Bento Grid -->
+    <section class="section container" id="features">
+      <div class="section-head">
+        <span class="section-eyebrow">Architecture</span>
+        <h2 class="section-h2">Native Win32 presentation overlay</h2>
+        <p class="section-sub">Renders smoothly over Zoom, Teams, slides, and IDEs without mouse hook stalls.</p>
+      </div>
+
+      <div class="bento-grid">
+        <!-- Bento 1: Chaikin Line Stabilizer -->
+        <div class="bento-card span-8">
+          <div class="bento-kicker">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M12 20h9"></path>
+              <path d="M16.5 3.5a2.121 2.121 0 1 1 3 3L7 19l-4 1 1-4Z"></path>
+            </svg>
+            <span>Chaikin spline engine</span>
+          </div>
+          <h3 class="bento-h3">Stabilized screen ink that smooths mouse tremor</h3>
+          <p class="bento-p">Drag anywhere in the pad below to sketch. Raw cursor segments pass through corner-cutting subdivision so highlights and diagrams read cleanly.</p>
+
+          <div class="bento-panel bento-panel-ink">
+            <canvas id="bentoInkPad" class="bento-ink-canvas"></canvas>
+            <button type="button" class="btn btn-secondary btn-xs bento-clear-btn" id="bentoClearInk">Clear sketch</button>
+          </div>
         </div>
-        <h3 class="bento-h3">Cinema Spotlight</h3>
-        <p class="bento-p">Instantly darken background noise with a soft radial vignette aperture, guiding 100% of viewer focus to the critical line of code or chart.</p>
-        
-        <div class="bento-panel" style="height: 230px; display: flex; align-items: center; justify-content: center; background: radial-gradient(circle at 50% 50%, transparent 45px, rgba(8,10,15,0.9) 100px);">
-          <div style="width: 90px; height: 90px; border: 2px solid #3B82F6; border-radius: 50%; box-shadow: 0 0 30px rgba(59,130,246,0.5); display: flex; align-items: center; justify-content: center; font-family: var(--font-mono); font-size: 11px; font-weight: 700; color: #60A5FA;">
-            FOCUS
+
+        <!-- Bento 2: Cinema Spotlight -->
+        <div class="bento-card span-4">
+          <div class="bento-kicker">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <circle cx="12" cy="12" r="9"></circle>
+              <circle cx="12" cy="12" r="3"></circle>
+            </svg>
+            <span>Spotlight focus</span>
+          </div>
+          <h3 class="bento-h3">Cinema vignette aperture</h3>
+          <p class="bento-p">Dim surrounding desktop clutter and keep audience attention locked on one code block or chart.</p>
+
+          <div class="bento-panel bento-panel-spotlight" id="bentoSpotlightPanel">
+            <div class="spotlight-code-sample" aria-hidden="true">
+              <div class="code-line muted">WS_EX_LAYERED | TOPMOST</div>
+              <div class="code-line active">WS_EX_TRANSPARENT (1:1)</div>
+              <div class="code-line muted">fade_duration = 6.0s</div>
+            </div>
+            <div class="spotlight-mask" id="bentoSpotlightMask"></div>
+            <div class="spotlight-ring" id="bentoSpotlightRing"></div>
+          </div>
+        </div>
+
+        <!-- Bento 3: Tap Feedback & Audio -->
+        <div class="bento-card span-4">
+          <div class="bento-kicker">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+              <path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+            </svg>
+            <span>Tactile feedback</span>
+          </div>
+          <h3 class="bento-h3">Acoustic tap presets and pop badges</h3>
+          <p class="bento-p">Six bundled WAV tap profiles, custom audio uploads, and subtle click ripple feedback.</p>
+
+          <button type="button" class="bento-panel bento-panel-tap" id="comicDemoTile">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="tap-demo-icon" aria-hidden="true">
+              <path d="M18 11V6a2 2 0 0 0-2-2 2 2 0 0 0-2 2"></path>
+              <path d="M14 10V4a2 2 0 0 0-2-2 2 2 0 0 0-2 2v6"></path>
+              <path d="M10 10.5V6a2 2 0 0 0-2-2 2 2 0 0 0-2 2v8"></path>
+              <path d="M18 8a2 2 0 1 1 4 0v6a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.86-5.99-2.34l-3.6-3.6a2 2 0 0 1 2.83-2.82L7 15"></path>
+            </svg>
+            <span class="tap-demo-title">Click to test tap sound</span>
+            <span class="tap-demo-sub">Plays tap_pop.wav and callout badge</span>
+          </button>
+        </div>
+
+        <!-- Bento 4: Click-through architecture -->
+        <div class="bento-card span-4">
+          <div class="bento-kicker">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <rect x="2" y="3" width="20" height="14" rx="2"></rect>
+              <line x1="8" y1="21" x2="16" y2="21"></line>
+              <line x1="12" y1="17" x2="12" y2="21"></line>
+            </svg>
+            <span>Win32 overlay</span>
+          </div>
+          <h3 class="bento-h3">Zero-hook click-through</h3>
+          <p class="bento-p">Avoids blocking low-level mouse hooks (<code class="inline-code">WH_MOUSE_LL</code>) via native layered window polling.</p>
+
+          <div class="bento-panel bento-panel-metrics">
+            <div class="metric-row">
+              <span class="metric-label">Frame cadence</span>
+              <span class="metric-value">60 fps</span>
+            </div>
+            <div class="metric-bar" aria-hidden="true">
+              <div class="metric-bar-fill"></div>
+            </div>
+            <div class="metric-row">
+              <span class="metric-label">Idle CPU usage</span>
+              <span class="metric-value">&lt; 0.5%</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Bento 5: Hotkeys -->
+        <div class="bento-card span-4">
+          <div class="bento-kicker">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <rect x="2" y="6" width="20" height="12" rx="2"></rect>
+              <path d="M6 10h.01M10 10h.01M14 10h.01M18 10h.01M8 14h8"></path>
+            </svg>
+            <span>Keycaps &amp; hold-to-draw</span>
+          </div>
+          <h3 class="bento-h3">Rebindable shortcuts</h3>
+          <p class="bento-p">Hold <span class="kbd">Shift</span> or <span class="kbd">Alt</span> to sketch temporarily without toggling draw mode.</p>
+
+          <div class="bento-panel bento-panel-keys">
+            <div class="shortcut-pair">
+              <div class="shortcut-keys">
+                <span class="kbd kbd-lg">Ctrl</span>
+                <span class="kbd-plus">+</span>
+                <span class="kbd kbd-lg">Alt</span>
+                <span class="kbd-plus">+</span>
+                <span class="kbd kbd-lg">H</span>
+              </div>
+              <span class="shortcut-desc">Toggle pointer visibility</span>
+            </div>
+            <div class="shortcut-pair">
+              <div class="shortcut-keys">
+                <span class="kbd kbd-lg">Ctrl</span>
+                <span class="kbd-plus">+</span>
+                <span class="kbd kbd-lg">Alt</span>
+                <span class="kbd-plus">+</span>
+                <span class="kbd kbd-lg">D</span>
+              </div>
+              <span class="shortcut-desc">Toggle screen ink mode</span>
+            </div>
           </div>
         </div>
       </div>
+    </section>
 
-      <!-- Bento 3: Tactile Pop Badges & WAV Audio (Span 4) -->
-      <div class="bento-card span-4">
-        <div class="bento-chip">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon></svg>
-          Tactile Feedback
+    <!-- 36 Hand Catalog Gallery -->
+    <section class="section container" id="gallery">
+      <div class="section-head">
+        <span class="section-eyebrow">Pointer catalog</span>
+        <h2 class="section-h2">36 sculpted hands and 4 vector pointers</h2>
+        <p class="section-sub">Click any pointer below to load it onto the live stage above.</p>
+      </div>
+
+      <div class="gallery-nav" role="tablist" aria-label="Pointer categories">
+        <button type="button" class="filter-tab active" data-filter="all">All (40)</button>
+        <button type="button" class="filter-tab" data-filter="hands">3D hands</button>
+        <button type="button" class="filter-tab" data-filter="material">Materials</button>
+        <button type="button" class="filter-tab" data-filter="special">Special</button>
+        <button type="button" class="filter-tab" data-filter="fx">Vector FX</button>
+      </div>
+
+      <div class="gallery-grid" id="galleryGrid"></div>
+    </section>
+
+    <!-- Architectural Comparison Table (Preserves subtle semantic pro/con colors) -->
+    <section class="section container" id="specs">
+      <div class="section-head">
+        <span class="section-eyebrow">Comparison</span>
+        <h2 class="section-h2">How TinyHand compares</h2>
+        <p class="section-sub">Built to solve Windows cursor freezes, jaggies, and bloated installers.</p>
+      </div>
+
+      <div class="table-wrap">
+        <table class="spec-table">
+          <thead>
+            <tr>
+              <th>Capability</th>
+              <th>Default cursor</th>
+              <th>Screen draw utilities</th>
+              <th>TinyHand Windows</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Tactile 3D pointers</td>
+              <td><span class="status-badge status-con">2D arrow only</span></td>
+              <td><span class="status-badge status-con">Not included</span></td>
+              <td><span class="status-badge status-pro">36 3D hands + 4 vector FX</span></td>
+            </tr>
+            <tr>
+              <td>Click responsiveness</td>
+              <td>Native OS</td>
+              <td><span class="status-badge status-con">Hook timeout freezes</span></td>
+              <td><span class="status-badge status-pro">Zero-hook Win32 polling</span></td>
+            </tr>
+            <tr>
+              <td>Line stabilization</td>
+              <td>None</td>
+              <td>Raw jagged polyline</td>
+              <td><span class="status-badge status-pro">Chaikin spline smoothing</span></td>
+            </tr>
+            <tr>
+              <td>Auditorium spotlight</td>
+              <td>None</td>
+              <td>Paid addon or missing</td>
+              <td><span class="status-badge status-pro">Built-in radial vignette</span></td>
+            </tr>
+            <tr>
+              <td>Packaging</td>
+              <td>OS built-in</td>
+              <td>Admin / MSI installer</td>
+              <td><span class="status-badge status-pro">Single portable .exe</span></td>
+            </tr>
+            <tr>
+              <td>License</td>
+              <td>Proprietary</td>
+              <td>$20 &ndash; $50 commercial</td>
+              <td><span class="status-badge status-pro">Free &amp; open source (MIT)</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- FAQ -->
+    <section class="section container" id="faq">
+      <div class="section-head">
+        <span class="section-eyebrow">FAQ</span>
+        <h2 class="section-h2">Common questions</h2>
+      </div>
+
+      <div class="bento-grid">
+        <div class="bento-card span-6">
+          <h3 class="bento-h3">Does TinyHand Windows require installation?</h3>
+          <p class="bento-p mb-0">No. It runs as a self-contained portable executable (<code class="inline-code">TinyHandWindows.exe</code>). Place it on your desktop, in Downloads, or on a USB drive without administrator permissions.</p>
         </div>
-        <h3 class="bento-h3">Comic Tap Badges & Audio FX</h3>
-        <p class="bento-p">Acoustic feedback on clicks with floating comic word badges and expanding sub-pixel ripple rings.</p>
-        
-        <div class="bento-panel" id="comicDemoTile" style="height: 190px; cursor: pointer; user-select: none; display: flex; align-items: center; justify-content: center;">
-          <div style="text-align: center;">
-            <div style="font-size: 32px; margin-bottom: 6px;">👆</div>
-            <div style="font-size: 13px; font-weight: 600; color: var(--cobalt-light);">Click Anywhere Here</div>
-            <div style="font-size: 11px; color: var(--text-muted); font-family: var(--font-mono);">Spawns pop badges &amp; WAV audio</div>
-          </div>
+
+        <div class="bento-card span-6">
+          <h3 class="bento-h3">Does it work with Zoom, Teams, and OBS?</h3>
+          <p class="bento-p mb-0">Yes. The hand pointer and annotations draw on a layered transparent Win32 desktop window, so screen-sharing and recording apps capture everything cleanly.</p>
+        </div>
+
+        <div class="bento-card span-6">
+          <h3 class="bento-h3">Can I upload custom hands and sounds?</h3>
+          <p class="bento-p mb-0">Yes. Open Settings to import any transparent PNG as a custom hand pointer or upload custom WAV and MP3 tap sound files.</p>
+        </div>
+
+        <div class="bento-card span-6">
+          <h3 class="bento-h3">How does this relate to macOS TinyHand?</h3>
+          <p class="bento-p mb-0">It shares the spirit of Kamran Ahmed&rsquo;s macOS app (<code class="inline-code">nilbuild/tinyhand</code>), rebuilt natively for Windows with custom studio settings and MIT licensing.</p>
         </div>
       </div>
+    </section>
 
-      <!-- Bento 4: Zero-Lag Win32 Engine (Span 4) -->
-      <div class="bento-card span-4">
-        <div class="bento-chip">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg>
-          Win32 Architecture
+    <!-- Download Callout -->
+    <section class="section container">
+      <div class="download-box">
+        <h2 class="download-h2">Ready for your next demo</h2>
+        <p class="download-p">Download the standalone portable executable for Windows 10 and 11. Zero telemetry and 100% open source.</p>
+
+        <div class="hero-cta-row">
+          <a href="https://github.com/wajahat-alip/tinyhand-windows/releases/download/v1.0.0/TinyHandWindows.exe" class="btn btn-primary btn-lg">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+              <polyline points="7 10 12 15 17 10"></polyline>
+              <line x1="12" y1="15" x2="12" y2="3"></line>
+            </svg>
+            Download TinyHandWindows.exe (v1.0.0)
+          </a>
+          <a href="https://github.com/wajahat-alip/tinyhand-windows" target="_blank" rel="noopener" class="btn btn-secondary btn-lg">
+            View GitHub repository
+          </a>
         </div>
-        <h3 class="bento-h3">Zero-Lag Click-Through</h3>
-        <p class="bento-p">No freezing low-level mouse hooks (<code style="color:#60A5FA;">WH_MOUSE_LL</code>). Powered by native Win32 layered transparent windows (<code style="color:#60A5FA;">WS_EX_TRANSPARENT</code>).</p>
-        
-        <div class="bento-panel" style="height: 190px; padding: 24px; display: flex; flex-direction: column; justify-content: center; gap: 10px;">
-          <div style="display: flex; justify-content: space-between; font-family: var(--font-mono); font-size: 12px;">
-            <span>Frame Latency</span>
-            <span style="color:#10B981; font-weight:700;">&lt; 1.2 ms (60 FPS)</span>
-          </div>
-          <div style="width: 100%; height: 6px; background: #1C2333; border-radius: 4px; overflow: hidden;">
-            <div style="width: 96%; height: 100%; background: #10B981;"></div>
-          </div>
-          <div style="display: flex; justify-content: space-between; font-family: var(--font-mono); font-size: 12px; margin-top: 4px;">
-            <span>CPU Idle Usage</span>
-            <span style="color:#10B981; font-weight:700;">0.2% - 0.5%</span>
-          </div>
-        </div>
+
+        <p class="download-meta">
+          Windows 10 (1809+) &amp; Windows 11 (64-bit) &middot; Portable 112 MB
+        </p>
       </div>
-
-      <!-- Bento 5: Quick-Draw & Hotkeys (Span 4) -->
-      <div class="bento-card span-4">
-        <div class="bento-chip">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
-          Ergonomic Controls
-        </div>
-        <h3 class="bento-h3">Hold-to-Draw & Keycaps</h3>
-        <p class="bento-p">Hold <span class="kbd">Alt</span> or <span class="kbd">Shift</span> to temporarily draw over active applications without losing focus. Rebind any global hotkey directly in settings.</p>
-        
-        <div class="bento-panel" style="height: 190px; display: flex; align-items: center; justify-content: center; gap: 10px;">
-          <span class="kbd" style="font-size: 13px; padding: 6px 12px;">Ctrl</span>
-          <span style="color:var(--text-muted); font-size:12px;">+</span>
-          <span class="kbd" style="font-size: 13px; padding: 6px 12px;">Alt</span>
-          <span style="color:var(--text-muted); font-size:12px;">+</span>
-          <span class="kbd" style="font-size: 13px; padding: 6px 12px;">H</span>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- 36 Hand Catalog Gallery Section -->
-  <section class="section container" id="gallery">
-    <div class="section-head">
-      <span class="section-tag">TACTILE POINTER CATALOG</span>
-      <h2 class="section-h2">Hand catalog: 36 3D models and 4 vector pointers</h2>
-      <p class="section-sub">Select a pointer below to test it on the live interactive stage above.</p>
-    </div>
-
-    <!-- Filter Tabs -->
-    <div class="gallery-nav">
-      <button class="filter-tab active" data-filter="all">All (40)</button>
-      <button class="filter-tab" data-filter="hands">3D Hands</button>
-      <button class="filter-tab" data-filter="material">Materials</button>
-      <button class="filter-tab" data-filter="special">Special</button>
-      <button class="filter-tab" data-filter="fx">Vector FX</button>
-    </div>
-
-    <!-- Gallery Grid -->
-    <div class="gallery-grid" id="galleryGrid"></div>
-  </section>
-
-  <!-- Architectural Benchmark Table -->
-  <section class="section container" id="specs">
-    <div class="section-head">
-      <span class="section-tag">ENGINEERING BENCHMARK</span>
-      <h2 class="section-h2">Architectural Comparison</h2>
-      <p class="section-sub">How TinyHand Windows compares to traditional cursors and generic screen annotation utilities.</p>
-    </div>
-
-    <div class="table-wrap">
-      <table class="spec-table">
-        <thead>
-          <tr>
-            <th>Feature / Architectural Trait</th>
-            <th>Default Mouse Cursor</th>
-            <th>Generic Screen Draw Tools</th>
-            <th>TinyHand Windows</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>3D Tactile Pointers</td>
-            <td><span class="status-badge status-con">No (2D Arrow)</span></td>
-            <td><span class="status-badge status-con">No</span></td>
-            <td><span class="status-badge status-pro">36 3D Hands + 4 Vector FX</span></td>
-          </tr>
-          <tr>
-            <td>Windows Click Freeze Bug</td>
-            <td>Native OS</td>
-            <td><span class="status-badge status-con">Freezes clicks (Hook timeout)</span></td>
-            <td><span class="status-badge status-pro">Zero-Hook Async Win32 Polling</span></td>
-          </tr>
-          <tr>
-            <td>Ink Stabilization</td>
-            <td>None</td>
-            <td>Linear / Jagged Lines</td>
-            <td><span class="status-badge status-pro">Chaikin Spline Smoothing</span></td>
-          </tr>
-          <tr>
-            <td>Cinema Spotlight</td>
-            <td>No</td>
-            <td>Paid Addon / Missing</td>
-            <td><span class="status-badge status-pro">Built-in Radial Vignette</span></td>
-          </tr>
-          <tr>
-            <td>Packaging &amp; Installation</td>
-            <td>OS Built-in</td>
-            <td>Requires Admin / MSI Installer</td>
-            <td><span class="status-badge status-pro">Single Portable .exe (Zero-Install)</span></td>
-          </tr>
-          <tr>
-            <td>License &amp; Cost</td>
-            <td>Proprietary</td>
-            <td>$20 - $50 Commercial</td>
-            <td><span class="status-badge status-pro">100% Free &amp; Open Source (MIT)</span></td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-  </section>
-
-  <!-- FAQ Section -->
-  <section class="section container" id="faq">
-    <div class="section-head">
-      <span class="section-tag">CLARITY</span>
-      <h2 class="section-h2">Frequently Asked Questions</h2>
-    </div>
-
-    <div class="bento-grid">
-      <div class="bento-card span-6">
-        <h3 class="bento-h3">Does TinyHand Windows require installation?</h3>
-        <p class="bento-p">No. It runs as a self-contained portable executable (<code style="color:#60A5FA;">TinyHandWindows.exe</code>). You can place it on your Desktop, run it from a USB drive, or keep it in Downloads without administrator permissions.</p>
-      </div>
-
-      <div class="bento-card span-6">
-        <h3 class="bento-h3">Does it work with Zoom, Teams, and Google Meet?</h3>
-        <p class="bento-p">Yes. The pointer and annotations render on a hardware-accelerated Win32 layered transparent desktop window. Any screen sharing software captures your hand and annotations in real time.</p>
-      </div>
-
-      <div class="bento-card span-6">
-        <h3 class="bento-h3">Can I upload my own custom hands and sounds?</h3>
-        <p class="bento-p">Yes. The settings studio includes an integrated Custom Hand Uploader (transparent PNG) and an Audio Uploader for any WAV or MP3 tap sound.</p>
-      </div>
-
-      <div class="bento-card span-6">
-        <h3 class="bento-h3">How is this inspired by macOS TinyHand?</h3>
-        <p class="bento-p">We love the design philosophy of Kamran Ahmed's macOS app (<code style="color:#60A5FA;">nilbuild/tinyhand</code>). We rebuilt and optimized the engine natively for Windows with full attribution under the MIT license.</p>
-      </div>
-    </div>
-  </section>
-
-  <!-- Download Callout Banner -->
-  <section class="section container">
-    <div class="download-box">
-      <h2 class="download-h2">Download TinyHand Windows</h2>
-      <p class="download-p">A portable desktop presentation utility for Windows 10 and 11. Zero telemetry, no installer, and 100% open source under the MIT license.</p>
-
-      <div class="hero-cta-row" style="margin-bottom: 20px;">
-        <a href="https://github.com/wajahat-alip/tinyhand-windows/releases/download/v1.0.0/TinyHandWindows.exe" class="btn btn-keycap-primary btn-lg">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-            <polyline points="7 10 12 15 17 10"></polyline>
-            <line x1="12" y1="15" x2="12" y2="3"></line>
-          </svg>
-          Download TinyHandWindows.exe (v1.0.0)
-        </a>
-        <a href="https://github.com/wajahat-alip/tinyhand-windows" target="_blank" rel="noopener" class="btn btn-secondary btn-lg">
-          View GitHub Repository
-        </a>
-      </div>
-
-      <div style="font-family: var(--font-mono); font-size: 0.82rem; color: var(--text-muted);">
-        Compatible with Windows 10 (1809+) &amp; Windows 11 (64-bit) &bull; Standalone ~111 MB
-      </div>
-    </div>
-  </section>
+    </section>
+  </main>
 
   <!-- Footer -->
   <footer class="footer container">
     <div class="footer-grid">
-      <div style="max-width: 380px;">
-        <div style="display: flex; align-items: center; gap: 10px; font-family: var(--font-display); font-weight: 700; color: #FFFFFF; font-size: 1.1rem; margin-bottom: 12px;">
-          <img src="assets/favicon.png" alt="Icon" style="width: 24px; height: 24px;">
-          TinyHand Windows
+      <div class="footer-brand-col">
+        <div class="footer-brand">
+          <img src="assets/favicon.png" alt="TinyHand Windows" width="24" height="24">
+          <span>TinyHand Windows</span>
         </div>
-        <p style="line-height: 1.6;">Premium 3D presentation pointer and screen drawing overlay utility engineered specifically for Windows.</p>
+        <p class="footer-tagline">Portable 3D presentation pointer and screen-ink studio engineered natively for Windows.</p>
       </div>
 
       <div class="footer-col">
         <h4>Project</h4>
         <ul>
           <li><a href="https://github.com/wajahat-alip/tinyhand-windows/releases" target="_blank" rel="noopener">Releases</a></li>
-          <li><a href="https://github.com/wajahat-alip/tinyhand-windows" target="_blank" rel="noopener">Source Code</a></li>
-          <li><a href="https://github.com/wajahat-alip/tinyhand-windows/issues" target="_blank" rel="noopener">Report Issue</a></li>
+          <li><a href="https://github.com/wajahat-alip/tinyhand-windows" target="_blank" rel="noopener">Source code</a></li>
+          <li><a href="https://github.com/wajahat-alip/tinyhand-windows/issues" target="_blank" rel="noopener">Report issue</a></li>
         </ul>
       </div>
 
       <div class="footer-col">
-        <h4>Credits &amp; Open Source</h4>
+        <h4>Credits &amp; License</h4>
         <ul>
           <li><a href="https://github.com/nilbuild/tinyhand" target="_blank" rel="noopener">nilbuild/tinyhand (macOS)</a></li>
-          <li>Original Concept by Kamran Ahmed</li>
-          <li>Windows Architecture by Wajahat Ali</li>
+          <li>Original concept by Kamran Ahmed</li>
+          <li>Windows engineering by Wajahat Ali</li>
           <li>MIT Open Source License</li>
         </ul>
       </div>
@@ -485,16 +510,15 @@
 
     <div class="footer-copy">
       <div>
-        &copy; 2026 Wajahat Ali (<a href="https://github.com/wajahat-alip" target="_blank" rel="noopener" style="color:var(--text-body); text-decoration:none;">@wajahat-alip</a>). Released under the MIT License.
+        &copy; 2026 Wajahat Ali (<a href="https://github.com/wajahat-alip" target="_blank" rel="noopener">@wajahat-alip</a>) &middot; MIT License
       </div>
       <div>
-        Inspired with gratitude by <a href="https://github.com/nilbuild/tinyhand" target="_blank" rel="noopener" style="color:var(--text-body); text-decoration:none;">nilbuild/tinyhand</a>.
+        Inspired by <a href="https://github.com/nilbuild/tinyhand" target="_blank" rel="noopener">nilbuild/tinyhand</a>
       </div>
     </div>
   </footer>
 
   <!-- Scripts -->
-  <script src="js/bg-motion.js"></script>
   <script src="js/interactive-pointer.js"></script>
   <script src="js/main.js"></script>
 </body>
