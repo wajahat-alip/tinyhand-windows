@@ -45,7 +45,7 @@ const VECTOR_ICONS_SVG = {
   cat_paw: `<svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="4" r="2"/><circle cx="18" cy="8" r="2"/><circle cx="20" cy="16" r="2"/><path d="M9 10a5 5 0 0 1 5 5v3.5a3.5 3.5 0 0 1-6.84 1.045Q6.52 17.48 4.46 16.84A3.5 3.5 0 0 1 5.5 10Z"/></svg>`,
   magic_wand: `<svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 4V2"/><path d="M15 16v-2"/><path d="M8 9h2"/><path d="M20 9h2"/><path d="M17.8 11.8 19 13"/><path d="M15 9h.01"/><path d="M17.8 6.2 19 5"/><path d="m3 21 9-9"/><path d="M12.2 6.2 11 5"/></svg>`,
   boxing_glove: `<svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="6" y="4" width="12" height="12" rx="5"/><path d="M8 16v3a2 2 0 0 0 2 2h4a2 2 0 0 0 2-2v-3"/><path d="M6 10H4a1 1 0 0 0-1 1v2a2 2 0 0 0 2 2h1"/></svg>`,
-  laser: `<svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><circle cx="12" cy="12" r="7" stroke="#FF6B4A"/><circle cx="12" cy="12" r="3" fill="#FF6B4A" stroke="none"/></svg>`
+  laser: `<svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><circle cx="12" cy="12" r="7" stroke="#EF4444"/><circle cx="12" cy="12" r="3" fill="#EF4444" stroke="none"/></svg>`
 };
 
 const SPECIAL_FX_POINTERS = [
@@ -255,7 +255,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const modalCloseBtn = document.getElementById('downloadModalClose');
   const modalRetryBtn = document.getElementById('modalRetryBtn');
   const copyChecksumBtn = document.getElementById('copyChecksumBtn');
-  const downloadCtas = document.querySelectorAll('[data-download-cta]');
+  const downloadCtas = document.querySelectorAll('[data-download-trigger]');
 
   function triggerExeDownload(url = RELEASE_BINARY_URL) {
     const link = document.createElement('a');
@@ -274,7 +274,7 @@ document.addEventListener('DOMContentLoaded', () => {
     btn.dataset.morphing = '1';
 
     const labelEl = btn.querySelector('.am-label') || btn;
-    const originalText = labelEl.textContent;
+    const originalText = btn.dataset.morphIdle || labelEl.textContent;
     const width = btn.getBoundingClientRect().width;
     if (width > 0) {
       btn.style.minWidth = `${Math.ceil(width)}px`;
@@ -301,7 +301,7 @@ document.addEventListener('DOMContentLoaded', () => {
     cta.addEventListener('click', (e) => {
       e.preventDefault();
       morphCtaButton(cta);
-      triggerExeDownload(cta.getAttribute('href') || RELEASE_BINARY_URL);
+      triggerExeDownload(RELEASE_BINARY_URL);
 
       if (downloadModal && typeof downloadModal.showModal === 'function' && !downloadModal.open) {
         downloadModal.showModal();

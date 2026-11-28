@@ -1,12 +1,20 @@
 /* ===================================================================
    TinyHand Windows — Ink-Graphite Design System
    Palette: Ink-Graphite (#0B0D14 / #07080D / #11141C)
-            + High-Contrast Off-White CTAs (#F4F4F6 / #111318)
-            + Warm Coral Micro-Accents (#FF6B4A)
-   Fonts: Familjen Grotesk (Display) + Inter (UI) + JetBrains Mono
+            + Neon-Lime Anti-Metal Accents (hsl(75 100% 65%))
+            + Silver Chrome Galaxies & Specular Borders
+   Fonts: Familjen Grotesk (Display) + Inter (UI) + JetBrains Mono + Geist Pixel
    =================================================================== */
 
 @import url('https://fonts.googleapis.com/css2?family=Familjen+Grotesk:wght@500;600&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap');
+
+@font-face {
+  font-family: 'Geist Pixel';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 400 700;
+  src: url('https://cdn.jsdelivr.net/npm/@fontsource-variable/geist-pixel/files/geist-pixel-latin-elsh-normal.woff2') format('woff2-variations');
+}
 
 :root {
   /* Ink-Graphite Surface Ramp (Preserved Unchanged) */
@@ -26,16 +34,17 @@
   --text-secondary: #a3a9b8;
   --text-muted: #7a8296;
 
-  /* Crisp Off-White Primary CTA */
+  /* Active Pill Chrome */
   --cta-bg: #f4f4f6;
   --cta-hover: #ffffff;
   --cta-fg: #111318;
 
-  /* Warm Coral-Orange Micro-Accents */
-  --accent: #ff6b4a;
-  --accent-ink: #ff8569;
-  --accent-soft: rgba(255, 107, 74, 0.10);
-  --accent-bd: rgba(255, 107, 74, 0.45);
+  /* Neon-Lime Anti-Metal Accents */
+  --accent: hsl(75, 100%, 65%);
+  --accent-ink: hsl(75, 95%, 68%);
+  --accent-dark: hsl(75, 88%, 32%);
+  --accent-soft: hsla(75, 100%, 65%, 0.10);
+  --accent-bd: hsla(75, 100%, 65%, 0.45);
 
   /* Toned Semantic Colors (Comparison Table Pros/Cons) */
   --pos-fg: #4cc38a;
@@ -75,6 +84,7 @@ html {
   background-color: var(--bg-page);
   color: var(--text-primary);
   font-family: var(--font-body);
+  overflow-x: clip;
 }
 
 body {
@@ -82,8 +92,14 @@ body {
   min-height: 100dvh;
   font-size: 0.9375rem;
   line-height: 1.5;
-  overflow-x: hidden;
+  overflow-x: clip;
   text-align: start;
+}
+
+.site-header,
+main,
+.footer {
+  overflow-x: clip;
 }
 
 :focus-visible {
@@ -212,7 +228,7 @@ body {
 }
 
 /* ===================================================================
-   Buttons: Anti-Metal Dot-Wave CTA & Metallic Chrome Rim Button
+   CTAs: Exact Jhey Anti-Metal Button & Framer GalaxyCursorButton
    =================================================================== */
 .btn {
   display: inline-flex;
@@ -239,269 +255,10 @@ body {
   transform: scale(0.98);
 }
 
-.btn-sm {
-  min-block-size: 36px;
-  padding: 8px 16px;
-}
-
-.btn-lg {
-  min-block-size: 44px;
-  padding: 12px 20px;
-  font-size: 0.9375rem;
-}
-
 .btn-xs {
   min-block-size: 32px;
   padding: 4px 12px;
   font-size: 0.75rem;
-}
-
-/* Primary CTA: Anti-Metal Dark Matte Pill + Expanding Coral 3x3 Dot-Wave Slab */
-.btn-antimetal {
-  --am-pad: 4px;
-  --am-slab-size: 30px;
-  position: relative;
-  overflow: hidden;
-  isolation: isolate;
-  justify-content: flex-start;
-  gap: 12px;
-  background-color: #14161d;
-  color: #eef0f5;
-  border: 1px solid rgba(238, 240, 245, 0.14);
-  border-radius: 12px;
-  padding: var(--am-pad) 18px var(--am-pad) var(--am-pad);
-  font-weight: 600;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05), 0 4px 14px rgba(0, 0, 0, 0.35);
-}
-
-.btn-antimetal.btn-lg {
-  --am-slab-size: 36px;
-  min-block-size: 46px;
-  gap: 14px;
-  padding: var(--am-pad) 22px var(--am-pad) var(--am-pad);
-  border-radius: 12px;
-}
-
-.btn-antimetal.btn-sm {
-  --am-slab-size: 28px;
-  min-block-size: 38px;
-  gap: 10px;
-  padding: var(--am-pad) 14px var(--am-pad) var(--am-pad);
-  border-radius: 10px;
-}
-
-.btn-antimetal.btn-xs {
-  --am-pad: 3px;
-  --am-slab-size: 26px;
-  min-block-size: 34px;
-  gap: 10px;
-  padding: var(--am-pad) 14px var(--am-pad) var(--am-pad);
-  border-radius: 999px;
-}
-
-.am-slab {
-  position: absolute;
-  top: var(--am-pad);
-  left: var(--am-pad);
-  bottom: var(--am-pad);
-  width: var(--am-slab-size);
-  background-color: var(--accent);
-  border-radius: 8px;
-  z-index: 1;
-  transition: width 320ms var(--ease), background-color 220ms var(--ease);
-}
-
-.btn-antimetal.btn-sm .am-slab {
-  border-radius: 6px;
-}
-
-.btn-antimetal.btn-xs .am-slab {
-  border-radius: 999px;
-}
-
-.btn-antimetal:hover .am-slab,
-.btn-antimetal:focus-visible .am-slab,
-.btn-antimetal.is-morphing .am-slab,
-.btn-antimetal.is-ready .am-slab {
-  width: calc(100% - (var(--am-pad) * 2));
-}
-
-.btn-antimetal:hover {
-  border-color: rgba(255, 107, 74, 0.55);
-}
-
-/* Cascading 3x3 Dot-Matrix Downward Arrow inside Left Square Slab */
-.am-matrix {
-  position: relative;
-  z-index: 2;
-  width: var(--am-slab-size);
-  height: var(--am-slab-size);
-  flex-shrink: 0;
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  grid-template-rows: repeat(3, 1fr);
-  place-items: center;
-  padding: 7px;
-  gap: 2px;
-}
-
-.btn-antimetal.btn-sm .am-matrix,
-.btn-antimetal.btn-xs .am-matrix {
-  padding: 6px;
-  gap: 1.5px;
-}
-
-.am-dot {
-  width: 3.5px;
-  height: 3.5px;
-  border-radius: 1px;
-  background-color: #111318;
-  display: block;
-}
-
-.btn-antimetal.btn-sm .am-dot,
-.btn-antimetal.btn-xs .am-dot {
-  width: 3px;
-  height: 3px;
-}
-
-.am-dot.d-off {
-  opacity: 0.14;
-}
-
-.am-dot.d-r0 {
-  animation: dotWave 1.15s ease-in-out infinite;
-  animation-delay: 0s;
-}
-
-.am-dot.d-r1 {
-  animation: dotWave 1.15s ease-in-out infinite;
-  animation-delay: 0.15s;
-}
-
-.am-dot.d-r2 {
-  animation: dotWave 1.15s ease-in-out infinite;
-  animation-delay: 0.30s;
-}
-
-@keyframes dotWave {
-  0%, 100% {
-    opacity: 0.42;
-    transform: translateY(-0.5px);
-  }
-  45%, 65% {
-    opacity: 1;
-    transform: translateY(1px);
-  }
-}
-
-.am-label {
-  position: relative;
-  z-index: 2;
-  color: #eef0f5;
-  transition: color 240ms var(--ease);
-}
-
-.btn-antimetal:hover .am-label,
-.btn-antimetal:focus-visible .am-label,
-.btn-antimetal.is-morphing .am-label,
-.btn-antimetal.is-ready .am-label {
-  color: #111318;
-}
-
-/* Secondary GitHub CTA: Metallic Chrome Rim + Traveling Light Sweep (beui.dev pattern) */
-.btn-metallic {
-  position: relative;
-  overflow: hidden;
-  isolation: isolate;
-  border: 0;
-  border-radius: 12px;
-  background: transparent;
-  color: #eef0f5;
-  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.36);
-}
-
-.btn-metallic.btn-lg {
-  min-block-size: 46px;
-}
-
-.metallic-rim {
-  position: absolute;
-  inset: 0 -18%;
-  z-index: 0;
-  border-radius: inherit;
-  background: linear-gradient(
-    105deg,
-    #14161d 0%,
-    #737373 14%,
-    #fafafa 26%,
-    #525252 38%,
-    #0e1016 50%,
-    #a3a3a3 64%,
-    #ffffff 75%,
-    #404040 87%,
-    #14161d 100%
-  );
-  animation: silverDrift 8s ease-in-out infinite;
-  pointer-events: none;
-}
-
-@keyframes silverDrift {
-  0%, 100% {
-    transform: translateX(0%);
-  }
-  50% {
-    transform: translateX(12%);
-  }
-}
-
-.metallic-sheen {
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  left: -60%;
-  width: 52%;
-  z-index: 1;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.55) 48%, transparent);
-  transform: translateX(0%) skewX(-16deg);
-  filter: blur(2px);
-  opacity: 0.6;
-  mix-blend-mode: screen;
-  pointer-events: none;
-  transition: none;
-}
-
-.btn-metallic:hover .metallic-sheen,
-.btn-metallic:focus-visible .metallic-sheen {
-  transform: translateX(320%) skewX(-16deg);
-  transition: transform 0.85s var(--ease);
-}
-
-.metallic-surface {
-  position: absolute;
-  inset: 1px;
-  z-index: 2;
-  border-radius: 11px;
-  background: linear-gradient(180deg, #1b1e28 0%, #11141c 100%);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.22),
-    inset 0 -1px 0 rgba(0, 0, 0, 0.45);
-  transition: background 180ms var(--ease);
-  pointer-events: none;
-}
-
-.btn-metallic:hover .metallic-surface,
-.btn-metallic:focus-visible .metallic-surface {
-  background: linear-gradient(180deg, #212531 0%, #141822 100%);
-}
-
-.metallic-content {
-  position: relative;
-  z-index: 3;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
 }
 
 .btn-secondary {
@@ -514,6 +271,272 @@ body {
 .btn-secondary:hover {
   background-color: var(--bg-hover);
   border-color: var(--rule-hover);
+}
+
+/* 1. Exact Scoped Jhey / Anti-Metal CTA */
+.anti-metal-btn {
+  height: 52px;
+  padding: 0;
+  margin: 0;
+  display: inline-grid;
+  align-items: center;
+  border-radius: 10px;
+  border: 2px solid #0a0a0c;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.14), 0 12px 24px -8px rgba(0, 0, 0, 0.7);
+  letter-spacing: 0.25px;
+  cursor: pointer;
+  position: relative;
+  background: #050507;
+  color: #ffffff;
+  font-family: var(--font-body);
+  font-weight: 500;
+  font-size: 15px;
+  overflow: hidden;
+  outline-color: hsl(75 100% 45%);
+  outline-offset: 0.25rem;
+  user-select: none;
+  text-decoration: none;
+}
+
+.anti-metal-btn:is(:hover, :focus-visible, .is-morphing, .is-ready) {
+  --active: 1;
+}
+
+.anti-metal-btn:active {
+  --pressed: 1;
+}
+
+.am-press-wrap {
+  height: 100%;
+  width: 100%;
+  border-radius: 8px;
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  scale: calc(1 - (var(--pressed, 0) * 0.04));
+  transition: scale 0.1s;
+}
+
+.am-slab {
+  --mask-image: url("https://assets.codepen.io/605876/chev-mask_1.png");
+  --spread: 24px;
+  --size: 28px;
+  width: 58px;
+  height: 100%;
+  background: hsl(75 100% 65%);
+  position: absolute;
+  left: 0;
+  top: 0;
+  transition: width 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+  border-radius: 7px;
+  box-shadow: 0 10px 10px -5px hsl(0 0% 0% / 0.5);
+  container-type: inline-size;
+  overflow: hidden;
+}
+
+.anti-metal-btn:is(:hover, :focus-visible, .is-morphing, .is-ready) .am-slab {
+  width: 100%;
+}
+
+.am-primary {
+  position: absolute;
+  inset: 0;
+  background: hsl(0 0% 0% / 0.18);
+  z-index: 2;
+  -webkit-mask: var(--mask-image) 50% 50% / var(--size) var(--size) no-repeat;
+  mask: var(--mask-image) 50% 50% / var(--size) var(--size) no-repeat;
+  container-type: inline-size;
+}
+
+.am-complimentary {
+  position: absolute;
+  inset: 0;
+  opacity: calc(var(--active, 0) * 0.42);
+  transition: opacity 0.25s;
+  background: hsl(0 0% 0% / 0.14);
+  container-type: inline-size;
+  -webkit-mask:
+    var(--mask-image) calc(50% - (var(--spread) * 1)) 50% / var(--size) var(--size) no-repeat,
+    var(--mask-image) calc(50% - (var(--spread) * 2)) 50% / var(--size) var(--size) no-repeat,
+    var(--mask-image) calc(50% - (var(--spread) * 3)) 50% / var(--size) var(--size) no-repeat,
+    var(--mask-image) calc(50% - (var(--spread) * 4)) 50% / var(--size) var(--size) no-repeat,
+    var(--mask-image) calc(50% - (var(--spread) * 5)) 50% / var(--size) var(--size) no-repeat,
+    var(--mask-image) calc(50% + (var(--spread) * 1)) 50% / var(--size) var(--size) no-repeat,
+    var(--mask-image) calc(50% + (var(--spread) * 2)) 50% / var(--size) var(--size) no-repeat,
+    var(--mask-image) calc(50% + (var(--spread) * 3)) 50% / var(--size) var(--size) no-repeat,
+    var(--mask-image) calc(50% + (var(--spread) * 4)) 50% / var(--size) var(--size) no-repeat,
+    var(--mask-image) calc(50% + (var(--spread) * 5)) 50% / var(--size) var(--size) no-repeat;
+  mask:
+    var(--mask-image) calc(50% - (var(--spread) * 1)) 50% / var(--size) var(--size) no-repeat,
+    var(--mask-image) calc(50% - (var(--spread) * 2)) 50% / var(--size) var(--size) no-repeat,
+    var(--mask-image) calc(50% - (var(--spread) * 3)) 50% / var(--size) var(--size) no-repeat,
+    var(--mask-image) calc(50% - (var(--spread) * 4)) 50% / var(--size) var(--size) no-repeat,
+    var(--mask-image) calc(50% - (var(--spread) * 5)) 50% / var(--size) var(--size) no-repeat,
+    var(--mask-image) calc(50% + (var(--spread) * 1)) 50% / var(--size) var(--size) no-repeat,
+    var(--mask-image) calc(50% + (var(--spread) * 2)) 50% / var(--size) var(--size) no-repeat,
+    var(--mask-image) calc(50% + (var(--spread) * 3)) 50% / var(--size) var(--size) no-repeat,
+    var(--mask-image) calc(50% + (var(--spread) * 4)) 50% / var(--size) var(--size) no-repeat,
+    var(--mask-image) calc(50% + (var(--spread) * 5)) 50% / var(--size) var(--size) no-repeat;
+}
+
+:where(.am-primary, .am-complimentary)::after {
+  --distance: calc(100cqi + 100%);
+  content: "";
+  height: calc(var(--size) * 4);
+  aspect-ratio: 1;
+  position: absolute;
+  left: 0%;
+  top: 50%;
+  translate: -50% -50%;
+  background: radial-gradient(hsl(0 0% 0%), transparent);
+  animation: am-fly-by calc((2 - var(--active, 0)) * 1s) infinite linear;
+}
+
+@keyframes am-fly-by {
+  0% {
+    translate: -100% -50%;
+  }
+  100% {
+    translate: var(--distance) -50%;
+  }
+}
+
+.am-label {
+  position: relative;
+  z-index: 3;
+  padding: 0 1.25rem 0 calc(58px + 1.15rem);
+  display: grid;
+  place-items: center;
+  height: 100%;
+  white-space: nowrap;
+  color: #ffffff;
+  transition: color 0.22s ease, transform 0.22s ease;
+}
+
+.anti-metal-btn:is(:hover, :focus-visible, .is-morphing, .is-ready) .am-label {
+  color: #090b06;
+  font-weight: 600;
+}
+
+/* Compact Navbar & Floating Pill Variant (40px height) */
+.anti-metal-btn--sm {
+  height: 40px;
+  font-size: 13.5px;
+  border-radius: 9px;
+}
+
+.anti-metal-btn--sm .am-slab {
+  --size: 22px;
+  --spread: 20px;
+  width: 44px;
+  border-radius: 6px;
+}
+
+.anti-metal-btn--sm:is(:hover, :focus-visible, .is-morphing, .is-ready) .am-slab {
+  width: 100%;
+}
+
+.anti-metal-btn--sm .am-label {
+  padding: 0 1rem 0 calc(44px + 0.9rem);
+}
+
+/* 2. Exact Scoped Framer GalaxyCursorButton */
+.galaxy-tilt-wrap {
+  position: relative;
+  display: inline-flex;
+  transform: perspective(900px) rotateX(var(--tilt-x, 0deg)) rotateY(var(--tilt-y, 0deg));
+  transform-style: preserve-3d;
+  will-change: transform;
+}
+
+.galaxy-btn {
+  position: relative;
+  height: 52px;
+  padding: 0 28px;
+  border-radius: 999px;
+  background: rgb(18, 18, 18);
+  border: 2.5px solid rgb(166, 166, 166);
+  box-shadow:
+    rgb(120, 120, 120) 0px 20px 60px -20px,
+    rgba(0, 0, 0, 0.6) 0px 8px 24px -8px,
+    inset 0 0 0 1px rgba(255, 255, 255, 0.05);
+  overflow: hidden;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  color: #f4f4f6;
+  cursor: pointer;
+  user-select: none;
+  isolation: isolate;
+  transition: border-color 0.22s ease, box-shadow 0.22s ease;
+}
+
+.galaxy-btn:hover,
+.galaxy-btn:focus-visible {
+  border-color: rgb(228, 228, 228);
+  box-shadow:
+    rgb(165, 165, 165) 0px 22px 64px -18px,
+    rgba(0, 0, 0, 0.72) 0px 10px 28px -8px,
+    inset 0 0 0 1px rgba(255, 255, 255, 0.14);
+}
+
+.galaxy-canvas-inner {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+  pointer-events: none;
+  border-radius: inherit;
+}
+
+.galaxy-spotlight {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  z-index: 2;
+  pointer-events: none;
+  mix-blend-mode: screen;
+  opacity: 0;
+  transition: opacity 0.22s ease;
+  background: radial-gradient(
+    180px 108px at var(--mx, 50%) var(--my, 30%),
+    rgba(255, 255, 255, 0.35) 0%,
+    rgba(255, 255, 255, 0.105) 45%,
+    rgba(255, 255, 255, 0) 75%
+  );
+}
+
+.galaxy-btn:hover .galaxy-spotlight,
+.galaxy-btn:focus-visible .galaxy-spotlight {
+  opacity: 1;
+}
+
+.galaxy-content {
+  position: relative;
+  z-index: 3;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  font-family: 'Geist Pixel', 'Geist Pixel Variable', var(--font-mono);
+  font-size: 13.5px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: #f4f4f6;
+  text-shadow: 0 1px 8px rgba(8, 8, 12, 0.95);
+}
+
+.galaxy-canvas-burst {
+  position: absolute;
+  inset: -140px;
+  width: calc(100% + 280px);
+  height: calc(100% + 280px);
+  pointer-events: none;
+  z-index: 20;
 }
 
 /* Tactile Win32 Keycaps */
@@ -796,7 +819,7 @@ body {
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background-color: var(--accent);
+  background-color: var(--accent-dark);
 }
 
 .hud-divider {
@@ -1728,7 +1751,9 @@ body {
   font-variant-numeric: tabular-nums;
 }
 
-.floating-cta .btn {
+.floating-cta .anti-metal-btn--sm,
+.floating-cta .anti-metal-btn--sm .am-slab,
+.floating-cta .anti-metal-btn--sm .am-press-wrap {
   border-radius: 999px;
 }
 
@@ -1812,7 +1837,7 @@ body {
   }
 
   .brand-name {
-    font-size: 0.9375rem;
+    font-size: 0.875rem;
   }
 
   .brand-version {
@@ -1823,21 +1848,30 @@ body {
     gap: 8px;
   }
 
-  .nav-actions .btn-sm {
-    --am-slab-size: 24px;
-    min-block-size: 34px;
-    padding: 4px 10px 4px 4px;
-    gap: 8px;
+  .nav-link-quiet {
     font-size: 0.8125rem;
+  }
+
+  .nav-actions .anti-metal-btn--sm {
+    height: 34px;
+    font-size: 12px;
+  }
+
+  .nav-actions .anti-metal-btn--sm .am-slab {
+    width: 34px;
+    --size: 18px;
+  }
+
+  .nav-actions .anti-metal-btn--sm .am-label {
+    padding: 0 0.75rem 0 calc(34px + 0.65rem);
+  }
+
+  .hero-cta-row {
+    flex-direction: column;
   }
 
   .download-box {
     padding: 32px 16px;
-  }
-
-  .download-box .btn-lg {
-    width: auto;
-    max-width: 100%;
   }
 
   .shortcut-pair {
@@ -1862,15 +1896,18 @@ body {
     scroll-behavior: auto;
   }
 
-  .am-dot,
-  .metallic-rim {
+  :where(.am-primary, .am-complimentary)::after {
     animation: none !important;
   }
 
   .btn,
+  .anti-metal-btn,
   .am-slab,
+  .am-complimentary,
   .am-label,
-  .metallic-sheen,
+  .am-press-wrap,
+  .galaxy-btn,
+  .galaxy-spotlight,
   .hud-btn,
   .filter-tab,
   .hand-tile,

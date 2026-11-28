@@ -100,7 +100,7 @@ class InteractivePointerStage {
     const sx = (w - sw) / 2;
     const sy = isNarrow ? 16 : (h - sh) / 2 - 14;
 
-    // Crisp warm coral underline highlight below slide headline
+    // Crisp neon-lime underline highlight below slide headline
     const yBase = isNarrow ? sy + 72 : sy + 82;
     const xStart = sx + (isNarrow ? 16 : 24);
     const xEnd = isNarrow ? sx + Math.min(sw - 32, 160) : sx + Math.min(272, sw * 0.44);
@@ -113,7 +113,7 @@ class InteractivePointerStage {
         y: yBase + Math.sin(t * Math.PI) * 3
       });
     }
-    this.inkPaths = [{ color: '#FF6B4A', points: pts }];
+    this.inkPaths = [{ color: '#C8FF4D', points: pts }];
   }
 
   resize() {
@@ -360,7 +360,7 @@ class InteractivePointerStage {
     ctx.fill();
     ctx.stroke();
 
-    ctx.fillStyle = '#FF8569';
+    ctx.fillStyle = '#D4FF5E';
     ctx.font = '500 11.5px "JetBrains Mono", monospace';
     ctx.fillText('01 · Pointers', p1x + 12, py + 24);
 
@@ -413,7 +413,7 @@ class InteractivePointerStage {
 
     ctx.beginPath();
     ctx.arc(cx, cy, radius, 0, Math.PI * 2);
-    ctx.strokeStyle = 'rgba(255, 107, 74, 0.55)';
+    ctx.strokeStyle = 'rgba(200, 255, 77, 0.55)';
     ctx.lineWidth = 1.5;
     ctx.stroke();
 
@@ -460,7 +460,7 @@ class InteractivePointerStage {
       ctx.save();
       ctx.beginPath();
       ctx.arc(r.x, r.y, r.radius, 0, Math.PI * 2);
-      ctx.strokeStyle = `rgba(255, 107, 74, ${r.alpha})`;
+      ctx.strokeStyle = `rgba(200, 255, 77, ${r.alpha})`;
       ctx.lineWidth = 2;
       ctx.stroke();
       ctx.restore();
@@ -493,7 +493,7 @@ class InteractivePointerStage {
       ctx.roundRect(-bw / 2, -bh / 2, bw, bh, 6);
       ctx.fill();
 
-      ctx.strokeStyle = `rgba(255, 107, 74, ${b.alpha * 0.7})`;
+      ctx.strokeStyle = `rgba(200, 255, 77, ${b.alpha * 0.75})`;
       ctx.lineWidth = 1;
       ctx.stroke();
 
@@ -620,7 +620,7 @@ class InteractivePointerStage {
     ctx.save();
     ctx.translate(x, y);
 
-    ctx.fillStyle = '#FF6B4A';
+    ctx.fillStyle = '#C8FF4D';
     ctx.beginPath();
     ctx.arc(0, 0, 8 * scale, 0, Math.PI * 2);
     ctx.fill();
