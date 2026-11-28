@@ -103,48 +103,73 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // 3. Bottom-Right Toast Notification System
-  const stageToast = document.getElementById('stageToast');
-  const toastMessage = document.getElementById('toastMessage');
-  const toastJumpBtn = document.getElementById('toastJumpBtn');
-  const toastDismissBtn = document.getElementById('toastDismissBtn');
-  let toastTimer = null;
+  // 3. Bottom-Right Stacked Toast Notification System
+  const toastStack = document.getElementById('toastStack');
 
-  function hideToast() {
-    if (!stageToast) return;
-    stageToast.classList.remove('is-visible');
-    clearTimeout(toastTimer);
+  function removeToastEl(toast) {
+    if (!toast || !toast.parentElement) return;
+    toast.classList.remove('is-visible');
+    setTimeout(() => toast.remove(), 220);
   }
 
   function showEquippedToast(handName) {
-    if (!stageToast || !toastMessage) return;
-    toastMessage.textContent = `Equipped ${handName}`;
-    stageToast.classList.add('is-visible');
-    clearTimeout(toastTimer);
-    toastTimer = setTimeout(hideToast, 4600);
-  }
+    if (!toastStack) return;
 
-  if (stageToast) {
-    stageToast.addEventListener('mouseenter', () => clearTimeout(toastTimer));
-    stageToast.addEventListener('mouseleave', () => {
-      if (stageToast.classList.contains('is-visible')) {
-        toastTimer = setTimeout(hideToast, 2500);
-      }
+    while (toastStack.children.length >= 3) {
+      toastStack.firstElementChild.remove();
+    }
+
+    const toast = document.createElement('div');
+    toast.className = 'stage-toast';
+    toast.setAttribute('role', 'status');
+
+    const dot = document.createElement('span');
+    dot.className = 'accent-dot';
+    dot.setAttribute('aria-hidden', 'true');
+
+    const msg = document.createElement('span');
+    msg.className = 'toast-message';
+    msg.textContent = `Equipped ${handName}`;
+
+    const sep = document.createElement('span');
+    sep.className = 'toast-sep';
+    sep.setAttribute('aria-hidden', 'true');
+    sep.textContent = '\u2014';
+
+    const jumpBtn = document.createElement('button');
+    jumpBtn.type = 'button';
+    jumpBtn.className = 'toast-jump-btn';
+    jumpBtn.textContent = 'Jump to Stage \u2191';
+
+    const dismissBtn = document.createElement('button');
+    dismissBtn.type = 'button';
+    dismissBtn.className = 'toast-dismiss-btn';
+    dismissBtn.setAttribute('aria-label', 'Dismiss notification');
+    dismissBtn.innerHTML = `<svg width="12" height="12" viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.3"><line x1="2" y1="2" x2="8" y2="8"></line><line x1="8" y1="2" x2="2" y2="8"></line></svg>`;
+
+    toast.append(dot, msg, sep, jumpBtn, dismissBtn);
+    toastStack.appendChild(toast);
+
+    requestAnimationFrame(() => toast.classList.add('is-visible'));
+
+    let timer = setTimeout(() => removeToastEl(toast), 4500);
+
+    toast.addEventListener('mouseenter', () => clearTimeout(timer));
+    toast.addEventListener('mouseleave', () => {
+      timer = setTimeout(() => removeToastEl(toast), 2400);
     });
-  }
 
-  if (toastJumpBtn) {
-    toastJumpBtn.addEventListener('click', () => {
+    jumpBtn.addEventListener('click', () => {
       const wrap = document.getElementById('playgroundWrap');
-      if (wrap) {
-        wrap.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      }
-      hideToast();
+      if (wrap) wrap.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      clearTimeout(timer);
+      removeToastEl(toast);
     });
-  }
 
-  if (toastDismissBtn) {
-    toastDismissBtn.addEventListener('click', hideToast);
+    dismissBtn.addEventListener('click', () => {
+      clearTimeout(timer);
+      removeToastEl(toast);
+    });
   }
 
   // 4. Render Hand Gallery Grid + Non-Intrusive Toast Sync
@@ -248,24 +273,25 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!btn || btn.dataset.morphing === '1') return;
     btn.dataset.morphing = '1';
 
-    const originalHtml = btn.innerHTML;
+    const labelEl = btn.querySelector('.am-label') || btn;
+    const originalText = labelEl.textContent;
     const width = btn.getBoundingClientRect().width;
     if (width > 0) {
       btn.style.minWidth = `${Math.ceil(width)}px`;
     }
 
     btn.classList.add('is-morphing');
-    btn.innerHTML = `<span class="accent-dot" aria-hidden="true"></span><span>Starting download...</span>`;
+    labelEl.textContent = 'Starting download...';
 
     setTimeout(() => {
       btn.classList.remove('is-morphing');
       btn.classList.add('is-ready');
-      btn.innerHTML = `<span class="accent-dot" aria-hidden="true"></span><span>Ready &#10003;</span>`;
+      labelEl.textContent = 'Downloaded \u2713';
     }, 550);
 
     setTimeout(() => {
       btn.classList.remove('is-ready');
-      btn.innerHTML = originalHtml;
+      labelEl.textContent = originalText;
       btn.style.minWidth = '';
       delete btn.dataset.morphing;
     }, 2400);

@@ -212,7 +212,7 @@ body {
 }
 
 /* ===================================================================
-   Buttons & Keycaps (Off-White CTAs, Tactile Hairlines)
+   Buttons: Anti-Metal Dot-Wave CTA & Metallic Chrome Rim Button
    =================================================================== */
 .btn {
   display: inline-flex;
@@ -231,7 +231,7 @@ body {
   user-select: none;
   white-space: nowrap;
   transition-property: color, background-color, border-color, transform, box-shadow;
-  transition-duration: 150ms;
+  transition-duration: 180ms;
   transition-timing-function: var(--ease);
 }
 
@@ -256,27 +256,252 @@ body {
   font-size: 0.75rem;
 }
 
-.btn-primary {
-  background-color: var(--cta-bg);
-  color: var(--cta-fg);
-  border-color: rgba(255, 255, 255, 0.24);
+/* Primary CTA: Anti-Metal Dark Matte Pill + Expanding Coral 3x3 Dot-Wave Slab */
+.btn-antimetal {
+  --am-pad: 4px;
+  --am-slab-size: 30px;
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  justify-content: flex-start;
+  gap: 12px;
+  background-color: #14161d;
+  color: #eef0f5;
+  border: 1px solid rgba(238, 240, 245, 0.14);
+  border-radius: 12px;
+  padding: var(--am-pad) 18px var(--am-pad) var(--am-pad);
   font-weight: 600;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05), 0 4px 14px rgba(0, 0, 0, 0.35);
 }
 
-.btn-primary:hover {
-  background-color: var(--cta-hover);
-  transform: translateY(-1px);
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.36);
+.btn-antimetal.btn-lg {
+  --am-slab-size: 36px;
+  min-block-size: 46px;
+  gap: 14px;
+  padding: var(--am-pad) 22px var(--am-pad) var(--am-pad);
+  border-radius: 12px;
 }
 
-.btn-primary.is-morphing {
-  opacity: 0.92;
+.btn-antimetal.btn-sm {
+  --am-slab-size: 28px;
+  min-block-size: 38px;
+  gap: 10px;
+  padding: var(--am-pad) 14px var(--am-pad) var(--am-pad);
+  border-radius: 10px;
 }
 
-.btn-primary.is-ready {
-  background-color: #ffffff;
-  color: var(--cta-fg);
+.btn-antimetal.btn-xs {
+  --am-pad: 3px;
+  --am-slab-size: 26px;
+  min-block-size: 34px;
+  gap: 10px;
+  padding: var(--am-pad) 14px var(--am-pad) var(--am-pad);
+  border-radius: 999px;
+}
+
+.am-slab {
+  position: absolute;
+  top: var(--am-pad);
+  left: var(--am-pad);
+  bottom: var(--am-pad);
+  width: var(--am-slab-size);
+  background-color: var(--accent);
+  border-radius: 8px;
+  z-index: 1;
+  transition: width 320ms var(--ease), background-color 220ms var(--ease);
+}
+
+.btn-antimetal.btn-sm .am-slab {
+  border-radius: 6px;
+}
+
+.btn-antimetal.btn-xs .am-slab {
+  border-radius: 999px;
+}
+
+.btn-antimetal:hover .am-slab,
+.btn-antimetal:focus-visible .am-slab,
+.btn-antimetal.is-morphing .am-slab,
+.btn-antimetal.is-ready .am-slab {
+  width: calc(100% - (var(--am-pad) * 2));
+}
+
+.btn-antimetal:hover {
+  border-color: rgba(255, 107, 74, 0.55);
+}
+
+/* Cascading 3x3 Dot-Matrix Downward Arrow inside Left Square Slab */
+.am-matrix {
+  position: relative;
+  z-index: 2;
+  width: var(--am-slab-size);
+  height: var(--am-slab-size);
+  flex-shrink: 0;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-rows: repeat(3, 1fr);
+  place-items: center;
+  padding: 7px;
+  gap: 2px;
+}
+
+.btn-antimetal.btn-sm .am-matrix,
+.btn-antimetal.btn-xs .am-matrix {
+  padding: 6px;
+  gap: 1.5px;
+}
+
+.am-dot {
+  width: 3.5px;
+  height: 3.5px;
+  border-radius: 1px;
+  background-color: #111318;
+  display: block;
+}
+
+.btn-antimetal.btn-sm .am-dot,
+.btn-antimetal.btn-xs .am-dot {
+  width: 3px;
+  height: 3px;
+}
+
+.am-dot.d-off {
+  opacity: 0.14;
+}
+
+.am-dot.d-r0 {
+  animation: dotWave 1.15s ease-in-out infinite;
+  animation-delay: 0s;
+}
+
+.am-dot.d-r1 {
+  animation: dotWave 1.15s ease-in-out infinite;
+  animation-delay: 0.15s;
+}
+
+.am-dot.d-r2 {
+  animation: dotWave 1.15s ease-in-out infinite;
+  animation-delay: 0.30s;
+}
+
+@keyframes dotWave {
+  0%, 100% {
+    opacity: 0.42;
+    transform: translateY(-0.5px);
+  }
+  45%, 65% {
+    opacity: 1;
+    transform: translateY(1px);
+  }
+}
+
+.am-label {
+  position: relative;
+  z-index: 2;
+  color: #eef0f5;
+  transition: color 240ms var(--ease);
+}
+
+.btn-antimetal:hover .am-label,
+.btn-antimetal:focus-visible .am-label,
+.btn-antimetal.is-morphing .am-label,
+.btn-antimetal.is-ready .am-label {
+  color: #111318;
+}
+
+/* Secondary GitHub CTA: Metallic Chrome Rim + Traveling Light Sweep (beui.dev pattern) */
+.btn-metallic {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  border: 0;
+  border-radius: 12px;
+  background: transparent;
+  color: #eef0f5;
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.36);
+}
+
+.btn-metallic.btn-lg {
+  min-block-size: 46px;
+}
+
+.metallic-rim {
+  position: absolute;
+  inset: 0 -18%;
+  z-index: 0;
+  border-radius: inherit;
+  background: linear-gradient(
+    105deg,
+    #14161d 0%,
+    #737373 14%,
+    #fafafa 26%,
+    #525252 38%,
+    #0e1016 50%,
+    #a3a3a3 64%,
+    #ffffff 75%,
+    #404040 87%,
+    #14161d 100%
+  );
+  animation: silverDrift 8s ease-in-out infinite;
+  pointer-events: none;
+}
+
+@keyframes silverDrift {
+  0%, 100% {
+    transform: translateX(0%);
+  }
+  50% {
+    transform: translateX(12%);
+  }
+}
+
+.metallic-sheen {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: -60%;
+  width: 52%;
+  z-index: 1;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.55) 48%, transparent);
+  transform: translateX(0%) skewX(-16deg);
+  filter: blur(2px);
+  opacity: 0.6;
+  mix-blend-mode: screen;
+  pointer-events: none;
+  transition: none;
+}
+
+.btn-metallic:hover .metallic-sheen,
+.btn-metallic:focus-visible .metallic-sheen {
+  transform: translateX(320%) skewX(-16deg);
+  transition: transform 0.85s var(--ease);
+}
+
+.metallic-surface {
+  position: absolute;
+  inset: 1px;
+  z-index: 2;
+  border-radius: 11px;
+  background: linear-gradient(180deg, #1b1e28 0%, #11141c 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.22),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.45);
+  transition: background 180ms var(--ease);
+  pointer-events: none;
+}
+
+.btn-metallic:hover .metallic-surface,
+.btn-metallic:focus-visible .metallic-surface {
+  background: linear-gradient(180deg, #212531 0%, #141822 100%);
+}
+
+.metallic-content {
+  position: relative;
+  z-index: 3;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
 }
 
 .btn-secondary {
@@ -1369,18 +1594,27 @@ body {
 }
 
 /* ===================================================================
-   Bottom-Right Toast Notification (Gallery-to-Stage Sync)
+   Bottom-Right Stacked Toast Notifications (Gallery-to-Stage Sync)
    =================================================================== */
-.stage-toast {
+.toast-stack {
   position: fixed;
   right: 24px;
   bottom: 20px;
   z-index: 120;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+  max-width: calc(100vw - 32px);
+  pointer-events: none;
+}
+
+.stage-toast {
   display: inline-flex;
   align-items: center;
-  gap: 10px;
-  max-width: calc(100vw - 32px);
-  padding: 10px 12px 10px 14px;
+  gap: 8px;
+  max-width: 100%;
+  padding: 9px 10px 9px 14px;
   background-color: rgba(17, 20, 28, 0.96);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
@@ -1390,8 +1624,8 @@ body {
   font-size: 0.8125rem;
   color: var(--text-primary);
   opacity: 0;
-  transform: translateY(12px);
-  pointer-events: none;
+  transform: translateY(10px) scale(0.98);
+  pointer-events: auto;
   transition-property: opacity, transform;
   transition-duration: 200ms;
   transition-timing-function: var(--ease);
@@ -1399,14 +1633,17 @@ body {
 
 .stage-toast.is-visible {
   opacity: 1;
-  transform: translateY(0);
-  pointer-events: auto;
+  transform: translateY(0) scale(1);
 }
 
 .toast-message {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+.toast-sep {
+  color: var(--text-muted);
 }
 
 .toast-jump-btn {
@@ -1553,10 +1790,14 @@ body {
     grid-template-columns: repeat(auto-fill, minmax(112px, 1fr));
   }
 
-  .stage-toast {
+  .toast-stack {
     left: 16px;
     right: 16px;
     bottom: 78px;
+    align-items: stretch;
+  }
+
+  .stage-toast {
     justify-content: space-between;
   }
 }
@@ -1583,8 +1824,10 @@ body {
   }
 
   .nav-actions .btn-sm {
+    --am-slab-size: 24px;
     min-block-size: 34px;
-    padding: 6px 10px;
+    padding: 4px 10px 4px 4px;
+    gap: 8px;
     font-size: 0.8125rem;
   }
 
@@ -1593,9 +1836,8 @@ body {
   }
 
   .download-box .btn-lg {
-    width: 100%;
-    white-space: normal;
-    text-align: center;
+    width: auto;
+    max-width: 100%;
   }
 
   .shortcut-pair {
@@ -1620,7 +1862,15 @@ body {
     scroll-behavior: auto;
   }
 
+  .am-dot,
+  .metallic-rim {
+    animation: none !important;
+  }
+
   .btn,
+  .am-slab,
+  .am-label,
+  .metallic-sheen,
   .hud-btn,
   .filter-tab,
   .hand-tile,
