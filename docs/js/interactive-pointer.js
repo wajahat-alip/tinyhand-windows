@@ -100,7 +100,7 @@ class InteractivePointerStage {
     const sx = (w - sw) / 2;
     const sy = isNarrow ? 16 : (h - sh) / 2 - 14;
 
-    // Crisp cobalt underline highlight below slide headline
+    // Crisp warm coral underline highlight below slide headline
     const yBase = isNarrow ? sy + 72 : sy + 82;
     const xStart = sx + (isNarrow ? 16 : 24);
     const xEnd = isNarrow ? sx + Math.min(sw - 32, 160) : sx + Math.min(272, sw * 0.44);
@@ -113,7 +113,7 @@ class InteractivePointerStage {
         y: yBase + Math.sin(t * Math.PI) * 3
       });
     }
-    this.inkPaths = [{ color: '#3B82F6', points: pts }];
+    this.inkPaths = [{ color: '#FF6B4A', points: pts }];
   }
 
   resize() {
@@ -360,7 +360,7 @@ class InteractivePointerStage {
     ctx.fill();
     ctx.stroke();
 
-    ctx.fillStyle = '#60A5FA';
+    ctx.fillStyle = '#FF8569';
     ctx.font = '500 11.5px "JetBrains Mono", monospace';
     ctx.fillText('01 · Pointers', p1x + 12, py + 24);
 
@@ -413,7 +413,7 @@ class InteractivePointerStage {
 
     ctx.beginPath();
     ctx.arc(cx, cy, radius, 0, Math.PI * 2);
-    ctx.strokeStyle = 'rgba(96, 165, 250, 0.45)';
+    ctx.strokeStyle = 'rgba(255, 107, 74, 0.55)';
     ctx.lineWidth = 1.5;
     ctx.stroke();
 
@@ -460,7 +460,7 @@ class InteractivePointerStage {
       ctx.save();
       ctx.beginPath();
       ctx.arc(r.x, r.y, r.radius, 0, Math.PI * 2);
-      ctx.strokeStyle = `rgba(96, 165, 250, ${r.alpha})`;
+      ctx.strokeStyle = `rgba(255, 107, 74, ${r.alpha})`;
       ctx.lineWidth = 2;
       ctx.stroke();
       ctx.restore();
@@ -488,12 +488,16 @@ class InteractivePointerStage {
       const bw = textWidth + 16;
       const bh = 22;
 
-      ctx.fillStyle = `rgba(37, 99, 235, ${b.alpha})`;
+      ctx.fillStyle = `rgba(244, 244, 246, ${b.alpha})`;
       ctx.beginPath();
       ctx.roundRect(-bw / 2, -bh / 2, bw, bh, 6);
       ctx.fill();
 
-      ctx.fillStyle = `rgba(248, 250, 252, ${b.alpha})`;
+      ctx.strokeStyle = `rgba(255, 107, 74, ${b.alpha * 0.7})`;
+      ctx.lineWidth = 1;
+      ctx.stroke();
+
+      ctx.fillStyle = `rgba(17, 19, 24, ${b.alpha})`;
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
       ctx.fillText(b.word, 0, 0);
@@ -616,12 +620,12 @@ class InteractivePointerStage {
     ctx.save();
     ctx.translate(x, y);
 
-    ctx.fillStyle = '#38BDF8';
+    ctx.fillStyle = '#FF6B4A';
     ctx.beginPath();
     ctx.arc(0, 0, 8 * scale, 0, Math.PI * 2);
     ctx.fill();
 
-    ctx.fillStyle = '#F8FAFC';
+    ctx.fillStyle = '#F4F4F6';
     ctx.beginPath();
     ctx.arc(0, 0, 3.5 * scale, 0, Math.PI * 2);
     ctx.fill();

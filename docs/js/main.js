@@ -45,7 +45,7 @@ const VECTOR_ICONS_SVG = {
   cat_paw: `<svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="4" r="2"/><circle cx="18" cy="8" r="2"/><circle cx="20" cy="16" r="2"/><path d="M9 10a5 5 0 0 1 5 5v3.5a3.5 3.5 0 0 1-6.84 1.045Q6.52 17.48 4.46 16.84A3.5 3.5 0 0 1 5.5 10Z"/></svg>`,
   magic_wand: `<svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 4V2"/><path d="M15 16v-2"/><path d="M8 9h2"/><path d="M20 9h2"/><path d="M17.8 11.8 19 13"/><path d="M15 9h.01"/><path d="M17.8 6.2 19 5"/><path d="m3 21 9-9"/><path d="M12.2 6.2 11 5"/></svg>`,
   boxing_glove: `<svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="6" y="4" width="12" height="12" rx="5"/><path d="M8 16v3a2 2 0 0 0 2 2h4a2 2 0 0 0 2-2v-3"/><path d="M6 10H4a1 1 0 0 0-1 1v2a2 2 0 0 0 2 2h1"/></svg>`,
-  laser: `<svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><circle cx="12" cy="12" r="7" stroke="#EF4444"/><circle cx="12" cy="12" r="3" fill="#EF4444" stroke="none"/></svg>`
+  laser: `<svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><circle cx="12" cy="12" r="7" stroke="#FF6B4A"/><circle cx="12" cy="12" r="3" fill="#FF6B4A" stroke="none"/></svg>`
 };
 
 const SPECIAL_FX_POINTERS = [
@@ -57,6 +57,9 @@ const SPECIAL_FX_POINTERS = [
 
 const SOUND_ICON_ON = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path><path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path></svg>`;
 const SOUND_ICON_OFF = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><line x1="23" y1="9" x2="17" y2="15"></line><line x1="17" y1="9" x2="23" y2="15"></line></svg>`;
+
+const RELEASE_BINARY_URL = 'https://github.com/wajahat-alip/tinyhand-windows/releases/download/v1.0.0/TinyHandWindows.exe';
+const BINARY_SHA256 = '4963e345e87726495c1edb78d7a4d607c9d14e3f8dece1731a8eb2303d517ddb';
 
 document.addEventListener('DOMContentLoaded', () => {
   // 1. Initialize Hero Interactive Stage
@@ -100,7 +103,51 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // 3. Render Hand Gallery Grid
+  // 3. Bottom-Right Toast Notification System
+  const stageToast = document.getElementById('stageToast');
+  const toastMessage = document.getElementById('toastMessage');
+  const toastJumpBtn = document.getElementById('toastJumpBtn');
+  const toastDismissBtn = document.getElementById('toastDismissBtn');
+  let toastTimer = null;
+
+  function hideToast() {
+    if (!stageToast) return;
+    stageToast.classList.remove('is-visible');
+    clearTimeout(toastTimer);
+  }
+
+  function showEquippedToast(handName) {
+    if (!stageToast || !toastMessage) return;
+    toastMessage.textContent = `Equipped ${handName}`;
+    stageToast.classList.add('is-visible');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(hideToast, 4600);
+  }
+
+  if (stageToast) {
+    stageToast.addEventListener('mouseenter', () => clearTimeout(toastTimer));
+    stageToast.addEventListener('mouseleave', () => {
+      if (stageToast.classList.contains('is-visible')) {
+        toastTimer = setTimeout(hideToast, 2500);
+      }
+    });
+  }
+
+  if (toastJumpBtn) {
+    toastJumpBtn.addEventListener('click', () => {
+      const wrap = document.getElementById('playgroundWrap');
+      if (wrap) {
+        wrap.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+      hideToast();
+    });
+  }
+
+  if (toastDismissBtn) {
+    toastDismissBtn.addEventListener('click', hideToast);
+  }
+
+  // 4. Render Hand Gallery Grid + Non-Intrusive Toast Sync
   const galleryGrid = document.getElementById('galleryGrid');
   const filterTabs = document.querySelectorAll('.filter-tab');
 
@@ -122,10 +169,12 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     items.forEach(item => {
+      const isSelected = heroStage.activeHand === item.id;
       const card = document.createElement('button');
       card.type = 'button';
-      card.className = `hand-tile ${heroStage.activeHand === item.id ? 'selected' : ''}`;
+      card.className = `hand-tile ${isSelected ? 'selected' : ''}`;
       card.dataset.id = item.id;
+      card.setAttribute('aria-pressed', String(isSelected));
 
       if (item.category === 'fx') {
         card.innerHTML = `
@@ -145,8 +194,12 @@ document.addEventListener('DOMContentLoaded', () => {
       }
 
       card.addEventListener('click', () => {
-        document.querySelectorAll('.hand-tile').forEach(c => c.classList.remove('selected'));
+        document.querySelectorAll('.hand-tile').forEach(c => {
+          c.classList.remove('selected');
+          c.setAttribute('aria-pressed', 'false');
+        });
         card.classList.add('selected');
+        card.setAttribute('aria-pressed', 'true');
 
         heroStage.setHand(item.id);
         heroStage.playTapSound();
@@ -155,14 +208,7 @@ document.addEventListener('DOMContentLoaded', () => {
           handIndicator.textContent = item.name;
         }
 
-        const stageCanvas = document.getElementById('heroStageCanvas');
-        if (stageCanvas) {
-          const rect = stageCanvas.getBoundingClientRect();
-          if (rect.top < -80 || rect.bottom > window.innerHeight + 80) {
-            const wrap = document.getElementById('playgroundWrap');
-            if (wrap) wrap.scrollIntoView({ behavior: 'smooth', block: 'center' });
-          }
-        }
+        showEquippedToast(item.name);
       });
 
       galleryGrid.appendChild(card);
@@ -179,136 +225,138 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
-  // 4. Bento Interactive Ink Pad (Pre-seeded Chaikin curve on initial load)
-  const inkCanvas = document.getElementById('bentoInkPad');
-  if (inkCanvas) {
-    const ictx = inkCanvas.getContext('2d');
-    let isDrawing = false;
-    let bentoHue = 215;
-    let cssW = 0;
-    let cssH = 0;
+  // 5. Morphing Download CTA + Windows-Native Quick-Start Modal
+  const downloadModal = document.getElementById('downloadModal');
+  const modalCloseBtn = document.getElementById('downloadModalClose');
+  const modalRetryBtn = document.getElementById('modalRetryBtn');
+  const copyChecksumBtn = document.getElementById('copyChecksumBtn');
+  const downloadCtas = document.querySelectorAll('[data-download-cta]');
 
-    function drawSampleSpline() {
-      if (cssW <= 0 || cssH <= 0) return;
-      ictx.save();
-      ictx.beginPath();
-      const padX = 36;
-      const midY = cssH * 0.52;
-      const span = cssW - padX * 2;
-      ictx.moveTo(padX, midY + 18);
-      ictx.bezierCurveTo(
-        padX + span * 0.25, midY - 46,
-        padX + span * 0.52, midY + 48,
-        padX + span * 0.88, midY - 22
-      );
-      ictx.strokeStyle = '#3B82F6';
-      ictx.lineWidth = 4;
-      ictx.lineCap = 'round';
-      ictx.lineJoin = 'round';
-      ictx.stroke();
-
-      // Quiet annotation arrow & label
-      ictx.fillStyle = '#7A8296';
-      ictx.font = '500 12px "JetBrains Mono", monospace';
-      ictx.fillText('Drag to sketch smoothed curve', padX, cssH - 18);
-      ictx.restore();
-    }
-
-    function resizeBentoCanvas() {
-      const rect = inkCanvas.getBoundingClientRect();
-      const dpr = Math.min(window.devicePixelRatio || 1, 2);
-      cssW = rect.width;
-      cssH = rect.height;
-      inkCanvas.width = rect.width * dpr;
-      inkCanvas.height = rect.height * dpr;
-      ictx.setTransform(dpr, 0, 0, dpr, 0, 0);
-      drawSampleSpline();
-    }
-
-    resizeBentoCanvas();
-    window.addEventListener('resize', resizeBentoCanvas);
-
-    inkCanvas.addEventListener('mousedown', (e) => {
-      isDrawing = true;
-      const rect = inkCanvas.getBoundingClientRect();
-      ictx.beginPath();
-      ictx.moveTo(e.clientX - rect.left, e.clientY - rect.top);
-      bentoHue = (bentoHue + 28) % 360;
-    });
-
-    inkCanvas.addEventListener('mousemove', (e) => {
-      if (!isDrawing) return;
-      const rect = inkCanvas.getBoundingClientRect();
-      const x = e.clientX - rect.left;
-      const y = e.clientY - rect.top;
-
-      ictx.strokeStyle = `hsl(${bentoHue}, 85%, 62%)`;
-      ictx.lineWidth = 4;
-      ictx.lineCap = 'round';
-      ictx.lineJoin = 'round';
-      ictx.lineTo(x, y);
-      ictx.stroke();
-    });
-
-    window.addEventListener('mouseup', () => {
-      isDrawing = false;
-    });
-
-    const btnClearBento = document.getElementById('bentoClearInk');
-    if (btnClearBento) {
-      btnClearBento.addEventListener('click', () => {
-        ictx.clearRect(0, 0, cssW, cssH);
-      });
-    }
+  function triggerExeDownload(url = RELEASE_BINARY_URL) {
+    const link = document.createElement('a');
+    link.href = url;
+    link.target = '_blank';
+    link.rel = 'noopener';
+    link.setAttribute('download', 'TinyHandWindows.exe');
+    link.style.display = 'none';
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
   }
 
-  // 5. Interactive Bento Spotlight Reveal
-  const spotlightPanel = document.getElementById('bentoSpotlightPanel');
-  if (spotlightPanel) {
-    spotlightPanel.addEventListener('mousemove', (e) => {
-      const rect = spotlightPanel.getBoundingClientRect();
-      const x = ((e.clientX - rect.left) / rect.width) * 100;
-      const y = ((e.clientY - rect.top) / rect.height) * 100;
-      spotlightPanel.style.setProperty('--spot-x', `${x.toFixed(1)}%`);
-      spotlightPanel.style.setProperty('--spot-y', `${y.toFixed(1)}%`);
+  function morphCtaButton(btn) {
+    if (!btn || btn.dataset.morphing === '1') return;
+    btn.dataset.morphing = '1';
+
+    const originalHtml = btn.innerHTML;
+    const width = btn.getBoundingClientRect().width;
+    if (width > 0) {
+      btn.style.minWidth = `${Math.ceil(width)}px`;
+    }
+
+    btn.classList.add('is-morphing');
+    btn.innerHTML = `<span class="accent-dot" aria-hidden="true"></span><span>Starting download...</span>`;
+
+    setTimeout(() => {
+      btn.classList.remove('is-morphing');
+      btn.classList.add('is-ready');
+      btn.innerHTML = `<span class="accent-dot" aria-hidden="true"></span><span>Ready &#10003;</span>`;
+    }, 550);
+
+    setTimeout(() => {
+      btn.classList.remove('is-ready');
+      btn.innerHTML = originalHtml;
+      btn.style.minWidth = '';
+      delete btn.dataset.morphing;
+    }, 2400);
+  }
+
+  downloadCtas.forEach(cta => {
+    cta.addEventListener('click', (e) => {
+      e.preventDefault();
+      morphCtaButton(cta);
+      triggerExeDownload(cta.getAttribute('href') || RELEASE_BINARY_URL);
+
+      if (downloadModal && typeof downloadModal.showModal === 'function' && !downloadModal.open) {
+        downloadModal.showModal();
+      }
     });
-    spotlightPanel.addEventListener('mouseleave', () => {
-      spotlightPanel.style.setProperty('--spot-x', '50%');
-      spotlightPanel.style.setProperty('--spot-y', '50%');
+  });
+
+  if (modalCloseBtn && downloadModal) {
+    modalCloseBtn.addEventListener('click', () => {
+      downloadModal.close();
     });
   }
 
-  // 6. Comic Pop Interactive Button in Bento
-  const comicDemoTile = document.getElementById('comicDemoTile');
-  if (comicDemoTile) {
-    const popAudio = new Audio('assets/sounds/tap_pop.wav');
-    comicDemoTile.addEventListener('click', (e) => {
-      popAudio.currentTime = 0;
-      popAudio.play().catch(() => {});
+  if (downloadModal) {
+    downloadModal.addEventListener('click', (e) => {
+      if (e.target === downloadModal) {
+        downloadModal.close();
+      }
+    });
+  }
 
-      const rect = comicDemoTile.getBoundingClientRect();
-      const px = e.clientX ? e.clientX - rect.left : rect.width * 0.5;
-      const py = e.clientY ? e.clientY - rect.top : rect.height * 0.5;
-
-      const words = ['BOOP', 'POP', 'CLICK', 'TAP', 'SNAP'];
-      const word = words[Math.floor(Math.random() * words.length)];
-
-      const badge = document.createElement('div');
-      badge.className = 'comic-demo-badge';
-      badge.textContent = word;
-      badge.style.left = `${px}px`;
-      badge.style.top = `${py - 16}px`;
-
-      comicDemoTile.appendChild(badge);
-
-      requestAnimationFrame(() => {
-        badge.style.transform = 'translate(-50%, -64px) scale(1)';
-        badge.style.opacity = '0';
-      });
-
+  if (modalRetryBtn) {
+    modalRetryBtn.addEventListener('click', () => {
+      triggerExeDownload(RELEASE_BINARY_URL);
+      const prev = modalRetryBtn.textContent;
+      modalRetryBtn.textContent = 'Retrying...';
       setTimeout(() => {
-        badge.remove();
-      }, 520);
+        modalRetryBtn.textContent = prev;
+      }, 1500);
     });
+  }
+
+  if (copyChecksumBtn) {
+    const originalCopyHtml = copyChecksumBtn.innerHTML;
+    let copyTimer = null;
+
+    copyChecksumBtn.addEventListener('click', async () => {
+      try {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          await navigator.clipboard.writeText(BINARY_SHA256);
+        } else {
+          const area = document.createElement('textarea');
+          area.value = BINARY_SHA256;
+          area.style.position = 'fixed';
+          area.style.opacity = '0';
+          document.body.appendChild(area);
+          area.select();
+          document.execCommand('copy');
+          area.remove();
+        }
+      } catch (e) {}
+
+      copyChecksumBtn.innerHTML = `<span class="accent-dot" aria-hidden="true"></span><span>Copied!</span>`;
+      clearTimeout(copyTimer);
+      copyTimer = setTimeout(() => {
+        copyChecksumBtn.innerHTML = originalCopyHtml;
+      }, 2000);
+    });
+  }
+
+  // 6. Scroll-Triggered Compact CTA Pill (Visible only after Hero Section)
+  const heroSection = document.getElementById('stageSection');
+  const floatingPill = document.getElementById('floatingCtaPill');
+  const floatingBtn = document.getElementById('floatingDownloadBtn');
+
+  function setFloatingVisible(visible) {
+    if (!floatingPill) return;
+    floatingPill.classList.toggle('is-visible', visible);
+    floatingPill.setAttribute('aria-hidden', String(!visible));
+    if (floatingBtn) {
+      floatingBtn.tabIndex = visible ? 0 : -1;
+    }
+  }
+
+  if (heroSection && floatingPill && 'IntersectionObserver' in window) {
+    const observer = new IntersectionObserver((entries) => {
+      const entry = entries[0];
+      const scrolledPastHero = !entry.isIntersecting && entry.boundingClientRect.bottom < 80;
+      setFloatingVisible(scrolledPastHero);
+    }, { threshold: 0 });
+
+    observer.observe(heroSection);
   }
 });

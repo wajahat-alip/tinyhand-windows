@@ -70,7 +70,7 @@
 
       <ul class="nav-menu">
         <li><a href="#stageSection">Live Stage</a></li>
-        <li><a href="#features">Architecture</a></li>
+        <li><a href="#architecture">Architecture</a></li>
         <li><a href="#gallery">36 Hands</a></li>
         <li><a href="#specs">Comparison</a></li>
         <li><a href="#faq">FAQ</a></li>
@@ -78,13 +78,13 @@
 
       <div class="nav-actions">
         <a href="https://github.com/wajahat-alip/tinyhand-windows" target="_blank" rel="noopener" class="nav-link-quiet">GitHub</a>
-        <a href="https://github.com/wajahat-alip/tinyhand-windows/releases/download/v1.0.0/TinyHandWindows.exe" class="btn btn-primary btn-sm">
+        <a href="https://github.com/wajahat-alip/tinyhand-windows/releases/download/v1.0.0/TinyHandWindows.exe" class="btn btn-primary btn-sm" data-download-cta>
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
             <polyline points="7 10 12 15 17 10"></polyline>
             <line x1="12" y1="15" x2="12" y2="3"></line>
           </svg>
-          Download .exe
+          <span>Download .exe</span>
         </a>
       </div>
     </nav>
@@ -100,13 +100,13 @@
         </p>
 
         <div class="hero-cta-row">
-          <a href="https://github.com/wajahat-alip/tinyhand-windows/releases/download/v1.0.0/TinyHandWindows.exe" class="btn btn-primary btn-lg">
+          <a href="https://github.com/wajahat-alip/tinyhand-windows/releases/download/v1.0.0/TinyHandWindows.exe" class="btn btn-primary btn-lg" data-download-cta>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
               <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
               <polyline points="7 10 12 15 17 10"></polyline>
               <line x1="12" y1="15" x2="12" y2="3"></line>
             </svg>
-            Download for Windows
+            <span>Download for Windows</span>
           </a>
 
           <a href="https://github.com/wajahat-alip/tinyhand-windows" target="_blank" rel="noopener" class="btn btn-secondary btn-lg">
@@ -114,7 +114,7 @@
               <path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.08-1.25-.27-2.48-1-3.5.28-1.15.28-2.35 0-3.5 0 0-1 0-3 1.5-2.64-.5-5.36-.5-8 0C6 2 5 2 5 2c-.3 1.15-.3 2.35 0 3.5A5.403 5.403 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.39.49-.68 1.05-.85 1.65-.17.6-.22 1.23-.15 1.85v4"></path>
               <path d="M9 18c-4.51 2-5-2-7-2"></path>
             </svg>
-            View source
+            <span>View source</span>
           </a>
         </div>
 
@@ -165,14 +165,14 @@
 
             <!-- Interactive Stage Floating Control Bar -->
             <div class="stage-hud" role="toolbar" aria-label="Interactive stage controls">
-              <button type="button" class="hud-btn" id="stageBtnSpotlight">
+              <button type="button" class="hud-btn" id="stageBtnSpotlight" aria-pressed="false">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                   <circle cx="12" cy="12" r="9"></circle>
                   <circle cx="12" cy="12" r="3"></circle>
                 </svg>
                 <span>Spotlight</span>
               </button>
-              <button type="button" class="hud-btn" id="stageBtnDraw">
+              <button type="button" class="hud-btn" id="stageBtnDraw" aria-pressed="false">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                   <path d="M12 20h9"></path>
                   <path d="M16.5 3.5a2.121 2.121 0 1 1 3 3L7 19l-4 1 1-4Z"></path>
@@ -201,152 +201,126 @@
       </div>
     </section>
 
-    <!-- Architecture Bento Grid -->
-    <section class="section container" id="features">
+    <!-- Architecture: Compact 3-Card Engineering Summary -->
+    <section class="section container" id="architecture">
       <div class="section-head">
-        <span class="section-eyebrow">Architecture</span>
+        <span class="section-eyebrow"><span class="accent-dot" aria-hidden="true"></span>Architecture</span>
         <h2 class="section-h2">Native Win32 presentation overlay</h2>
-        <p class="section-sub">Renders smoothly over Zoom, Teams, slides, and IDEs without mouse hook stalls.</p>
+        <p class="section-sub">Engineered specifically for live screen-sharing, responsive hotkeys, and zero cursor lag.</p>
       </div>
 
-      <div class="bento-grid">
-        <!-- Bento 1: Chaikin Line Stabilizer -->
-        <div class="bento-card span-8">
-          <div class="bento-kicker">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-              <path d="M12 20h9"></path>
-              <path d="M16.5 3.5a2.121 2.121 0 1 1 3 3L7 19l-4 1 1-4Z"></path>
-            </svg>
-            <span>Chaikin spline engine</span>
-          </div>
-          <h3 class="bento-h3">Stabilized screen ink that smooths mouse tremor</h3>
-          <p class="bento-p">Drag anywhere in the pad below to sketch. Raw cursor segments pass through corner-cutting subdivision so highlights and diagrams read cleanly.</p>
-
-          <div class="bento-panel bento-panel-ink">
-            <canvas id="bentoInkPad" class="bento-ink-canvas"></canvas>
-            <button type="button" class="btn btn-secondary btn-xs bento-clear-btn" id="bentoClearInk">Clear sketch</button>
-          </div>
-        </div>
-
-        <!-- Bento 2: Cinema Spotlight -->
-        <div class="bento-card span-4">
-          <div class="bento-kicker">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-              <circle cx="12" cy="12" r="9"></circle>
-              <circle cx="12" cy="12" r="3"></circle>
-            </svg>
-            <span>Spotlight focus</span>
-          </div>
-          <h3 class="bento-h3">Cinema vignette aperture</h3>
-          <p class="bento-p">Dim surrounding desktop clutter and keep audience attention locked on one code block or chart.</p>
-
-          <div class="bento-panel bento-panel-spotlight" id="bentoSpotlightPanel">
-            <div class="spotlight-code-sample" aria-hidden="true">
-              <div class="code-line muted">WS_EX_LAYERED | TOPMOST</div>
-              <div class="code-line active">WS_EX_TRANSPARENT (1:1)</div>
-              <div class="code-line muted">fade_duration = 6.0s</div>
-            </div>
-            <div class="spotlight-mask" id="bentoSpotlightMask"></div>
-            <div class="spotlight-ring" id="bentoSpotlightRing"></div>
-          </div>
-        </div>
-
-        <!-- Bento 3: Tap Feedback & Audio -->
-        <div class="bento-card span-4">
-          <div class="bento-kicker">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-              <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
-              <path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path>
-            </svg>
-            <span>Tactile feedback</span>
-          </div>
-          <h3 class="bento-h3">Acoustic tap presets and pop badges</h3>
-          <p class="bento-p">Six bundled WAV tap profiles, custom audio uploads, and subtle click ripple feedback.</p>
-
-          <button type="button" class="bento-panel bento-panel-tap" id="comicDemoTile">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="tap-demo-icon" aria-hidden="true">
-              <path d="M18 11V6a2 2 0 0 0-2-2 2 2 0 0 0-2 2"></path>
-              <path d="M14 10V4a2 2 0 0 0-2-2 2 2 0 0 0-2 2v6"></path>
-              <path d="M10 10.5V6a2 2 0 0 0-2-2 2 2 0 0 0-2 2v8"></path>
-              <path d="M18 8a2 2 0 1 1 4 0v6a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.86-5.99-2.34l-3.6-3.6a2 2 0 0 1 2.83-2.82L7 15"></path>
-            </svg>
-            <span class="tap-demo-title">Click to test tap sound</span>
-            <span class="tap-demo-sub">Plays tap_pop.wav and callout badge</span>
-          </button>
-        </div>
-
-        <!-- Bento 4: Click-through architecture -->
-        <div class="bento-card span-4">
-          <div class="bento-kicker">
+      <div class="arch-grid">
+        <!-- Card 1: Broadcast & IDE Compatibility -->
+        <article class="arch-card">
+          <div class="arch-kicker">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
               <rect x="2" y="3" width="20" height="14" rx="2"></rect>
               <line x1="8" y1="21" x2="16" y2="21"></line>
               <line x1="12" y1="17" x2="12" y2="21"></line>
             </svg>
-            <span>Win32 overlay</span>
+            <span>Screen capture</span>
           </div>
-          <h3 class="bento-h3">Zero-hook click-through</h3>
-          <p class="bento-p">Avoids blocking low-level mouse hooks (<code class="inline-code">WH_MOUSE_LL</code>) via native layered window polling.</p>
+          <h3 class="arch-h3">Works seamlessly over Zoom, OBS, Teams &amp; IDEs</h3>
+          <p class="arch-p">Renders on a hardware-composited layered Win32 surface so video calls, recorders, and full-screen editors capture every gesture cleanly.</p>
 
-          <div class="bento-panel bento-panel-metrics">
-            <div class="metric-row">
-              <span class="metric-label">Frame cadence</span>
-              <span class="metric-value">60 fps</span>
-            </div>
-            <div class="metric-bar" aria-hidden="true">
-              <div class="metric-bar-fill"></div>
-            </div>
-            <div class="metric-row">
-              <span class="metric-label">Idle CPU usage</span>
-              <span class="metric-value">&lt; 0.5%</span>
-            </div>
+          <div class="arch-panel">
+            <ul class="app-compat-list" aria-label="Compatible applications">
+              <li class="app-chip"><span class="accent-dot" aria-hidden="true"></span>Zoom</li>
+              <li class="app-chip"><span class="accent-dot" aria-hidden="true"></span>OBS Studio</li>
+              <li class="app-chip"><span class="accent-dot" aria-hidden="true"></span>Teams</li>
+              <li class="app-chip"><span class="accent-dot" aria-hidden="true"></span>VS Code</li>
+              <li class="app-chip"><span class="accent-dot" aria-hidden="true"></span>PowerPoint</li>
+            </ul>
           </div>
-        </div>
+        </article>
 
-        <!-- Bento 5: Hotkeys -->
-        <div class="bento-card span-4">
-          <div class="bento-kicker">
+        <!-- Card 2: Global Hotkeys & Hold-to-Draw Keycaps -->
+        <article class="arch-card">
+          <div class="arch-kicker">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
               <rect x="2" y="6" width="20" height="12" rx="2"></rect>
               <path d="M6 10h.01M10 10h.01M14 10h.01M18 10h.01M8 14h8"></path>
             </svg>
-            <span>Keycaps &amp; hold-to-draw</span>
+            <span>Tactile bindings</span>
           </div>
-          <h3 class="bento-h3">Rebindable shortcuts</h3>
-          <p class="bento-p">Hold <span class="kbd">Shift</span> or <span class="kbd">Alt</span> to sketch temporarily without toggling draw mode.</p>
+          <h3 class="arch-h3">Instant global hotkeys &amp; hold-to-draw keycaps</h3>
+          <p class="arch-p">Toggle overlay tools from any focused window or hold <kbd class="kbd">Shift</kbd> / <kbd class="kbd">Alt</kbd> to sketch temporarily without switching modes.</p>
 
-          <div class="bento-panel bento-panel-keys">
-            <div class="shortcut-pair">
-              <div class="shortcut-keys">
-                <span class="kbd kbd-lg">Ctrl</span>
-                <span class="kbd-plus">+</span>
-                <span class="kbd kbd-lg">Alt</span>
-                <span class="kbd-plus">+</span>
-                <span class="kbd kbd-lg">H</span>
+          <div class="arch-panel">
+            <div class="shortcut-list">
+              <div class="shortcut-pair">
+                <div class="shortcut-keys">
+                  <kbd class="kbd kbd-lg">Ctrl</kbd>
+                  <span class="kbd-plus">+</span>
+                  <kbd class="kbd kbd-lg">Alt</kbd>
+                  <span class="kbd-plus">+</span>
+                  <kbd class="kbd kbd-lg">H</kbd>
+                </div>
+                <span class="shortcut-desc">Toggle pointer</span>
               </div>
-              <span class="shortcut-desc">Toggle pointer visibility</span>
-            </div>
-            <div class="shortcut-pair">
-              <div class="shortcut-keys">
-                <span class="kbd kbd-lg">Ctrl</span>
-                <span class="kbd-plus">+</span>
-                <span class="kbd kbd-lg">Alt</span>
-                <span class="kbd-plus">+</span>
-                <span class="kbd kbd-lg">D</span>
+              <div class="shortcut-pair">
+                <div class="shortcut-keys">
+                  <kbd class="kbd kbd-lg">Ctrl</kbd>
+                  <span class="kbd-plus">+</span>
+                  <kbd class="kbd kbd-lg">Alt</kbd>
+                  <span class="kbd-plus">+</span>
+                  <kbd class="kbd kbd-lg">D</kbd>
+                </div>
+                <span class="shortcut-desc">Screen ink mode</span>
               </div>
-              <span class="shortcut-desc">Toggle screen ink mode</span>
+              <div class="shortcut-pair">
+                <div class="shortcut-keys">
+                  <kbd class="kbd">Shift</kbd>
+                  <span class="kbd-plus">/</span>
+                  <kbd class="kbd">Alt</kbd>
+                </div>
+                <span class="shortcut-desc">Hold to sketch</span>
+              </div>
             </div>
           </div>
-        </div>
+        </article>
+
+        <!-- Card 3: Pure Native Win32 Footprint -->
+        <article class="arch-card">
+          <div class="arch-kicker">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+            </svg>
+            <span>Zero hook overhead</span>
+          </div>
+          <h3 class="arch-h3">Pure native Win32 footprint</h3>
+          <p class="arch-p">Bypasses global <code class="inline-code">WH_MOUSE_LL</code> hooks via direct coordinate polling so cursor input never freezes under system load.</p>
+
+          <div class="arch-panel">
+            <dl class="footprint-specs">
+              <div class="footprint-row">
+                <dt>Frame cadence</dt>
+                <dd><span class="accent-dot" aria-hidden="true"></span>60 FPS locked</dd>
+              </div>
+              <div class="footprint-row">
+                <dt>Idle CPU usage</dt>
+                <dd>&lt; 0.5%</dd>
+              </div>
+              <div class="footprint-row">
+                <dt>Mouse hooks</dt>
+                <dd>Zero LL hooks</dd>
+              </div>
+              <div class="footprint-row">
+                <dt>Distribution</dt>
+                <dd>Portable 112 MB .exe</dd>
+              </div>
+            </dl>
+          </div>
+        </article>
       </div>
     </section>
 
     <!-- 36 Hand Catalog Gallery -->
     <section class="section container" id="gallery">
       <div class="section-head">
-        <span class="section-eyebrow">Pointer catalog</span>
+        <span class="section-eyebrow"><span class="accent-dot" aria-hidden="true"></span>Pointer catalog</span>
         <h2 class="section-h2">36 sculpted hands and 4 vector pointers</h2>
-        <p class="section-sub">Click any pointer below to load it onto the live stage above.</p>
+        <p class="section-sub">Click any pointer below to equip it on the live stage above.</p>
       </div>
 
       <div class="gallery-nav" role="tablist" aria-label="Pointer categories">
@@ -363,7 +337,7 @@
     <!-- Architectural Comparison Table (Preserves subtle semantic pro/con colors) -->
     <section class="section container" id="specs">
       <div class="section-head">
-        <span class="section-eyebrow">Comparison</span>
+        <span class="section-eyebrow"><span class="accent-dot" aria-hidden="true"></span>Comparison</span>
         <h2 class="section-h2">How TinyHand compares</h2>
         <p class="section-sub">Built to solve Windows cursor freezes, jaggies, and bloated installers.</p>
       </div>
@@ -423,7 +397,7 @@
     <!-- FAQ -->
     <section class="section container" id="faq">
       <div class="section-head">
-        <span class="section-eyebrow">FAQ</span>
+        <span class="section-eyebrow"><span class="accent-dot" aria-hidden="true"></span>FAQ</span>
         <h2 class="section-h2">Common questions</h2>
       </div>
 
@@ -457,16 +431,16 @@
         <p class="download-p">Download the standalone portable executable for Windows 10 and 11. Zero telemetry and 100% open source.</p>
 
         <div class="hero-cta-row">
-          <a href="https://github.com/wajahat-alip/tinyhand-windows/releases/download/v1.0.0/TinyHandWindows.exe" class="btn btn-primary btn-lg">
+          <a href="https://github.com/wajahat-alip/tinyhand-windows/releases/download/v1.0.0/TinyHandWindows.exe" class="btn btn-primary btn-lg" data-download-cta>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
               <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
               <polyline points="7 10 12 15 17 10"></polyline>
               <line x1="12" y1="15" x2="12" y2="3"></line>
             </svg>
-            Download TinyHandWindows.exe (v1.0.0)
+            <span>Download for Windows</span>
           </a>
           <a href="https://github.com/wajahat-alip/tinyhand-windows" target="_blank" rel="noopener" class="btn btn-secondary btn-lg">
-            View GitHub repository
+            <span>View GitHub repository</span>
           </a>
         </div>
 
@@ -517,6 +491,114 @@
       </div>
     </div>
   </footer>
+
+  <!-- Windows-Native Download Quick-Start Modal -->
+  <dialog id="downloadModal" class="win-modal" aria-labelledby="downloadModalTitle">
+    <div class="win-modal-shell">
+      <div class="win-modal-titlebar">
+        <div class="win-titlebar-left">
+          <img src="assets/favicon.png" alt="" width="16" height="16" class="win-titlebar-icon">
+          <span class="win-titlebar-text" id="downloadModalTitle">TinyHand Windows — Quick-Start</span>
+        </div>
+        <button type="button" class="win11-btn win11-close" id="downloadModalClose" aria-label="Close download modal">
+          <svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.2">
+            <line x1="1.5" y1="1.5" x2="8.5" y2="8.5"></line>
+            <line x1="8.5" y1="1.5" x2="1.5" y2="8.5"></line>
+          </svg>
+        </button>
+      </div>
+
+      <div class="win-modal-body">
+        <div class="modal-head-row">
+          <div>
+            <h3 class="modal-heading">TinyHandWindows.exe</h3>
+            <p class="modal-sub">Standalone portable binary for Windows 10 &amp; 11 (x64)</p>
+          </div>
+          <span class="modal-version-badge">
+            <span class="accent-dot" aria-hidden="true"></span>
+            v1.0.0 &middot; 112 MB
+          </span>
+        </div>
+
+        <ol class="modal-steps">
+          <li>
+            <span class="step-num">1</span>
+            <div>
+              <strong>Run anywhere, no install needed</strong>
+              <p>Open <code class="inline-code">TinyHandWindows.exe</code> from Downloads or a USB drive without administrator permissions.</p>
+            </div>
+          </li>
+          <li>
+            <span class="step-num">2</span>
+            <div>
+              <strong>Bypass Windows SmartScreen once</strong>
+              <p>If SmartScreen shows &ldquo;Windows protected your PC&rdquo; on this unsigned build, click <strong>More info</strong> &rarr; <strong>Run anyway</strong>.</p>
+            </div>
+          </li>
+          <li>
+            <span class="step-num">3</span>
+            <div>
+              <strong>Start presenting cleanly</strong>
+              <p>Use <kbd class="kbd">Ctrl</kbd>+<kbd class="kbd">Alt</kbd>+<kbd class="kbd">H</kbd> to summon your 3D pointer and <kbd class="kbd">Ctrl</kbd>+<kbd class="kbd">Alt</kbd>+<kbd class="kbd">D</kbd> to toggle stabilized ink.</p>
+            </div>
+          </li>
+        </ol>
+
+        <div class="checksum-box">
+          <div class="checksum-header">
+            <span class="checksum-label">SHA-256 checksum &amp; PowerShell verification</span>
+            <button type="button" class="btn btn-secondary btn-xs" id="copyChecksumBtn">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <rect x="9" y="9" width="13" height="13" rx="2"></rect>
+                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+              </svg>
+              <span>Copy SHA-256</span>
+            </button>
+          </div>
+          <code class="checksum-code" id="checksumValue">4963e345e87726495c1edb78d7a4d607c9d14e3f8dece1731a8eb2303d517ddb</code>
+          <div class="checksum-cli">certutil -hashfile TinyHandWindows.exe SHA256</div>
+        </div>
+
+        <div class="modal-footer">
+          <span class="modal-fallback-label">Download didn&rsquo;t start?</span>
+          <div class="modal-fallback-actions">
+            <button type="button" class="modal-link-btn" id="modalRetryBtn">Retry .exe</button>
+            <span aria-hidden="true">&middot;</span>
+            <a href="https://github.com/wajahat-alip/tinyhand-windows/releases" target="_blank" rel="noopener" class="modal-link">View on GitHub Releases</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </dialog>
+
+  <!-- Bottom-Right Gallery-to-Stage Sync Toast -->
+  <div id="stageToast" class="stage-toast" role="status" aria-live="polite" aria-atomic="true">
+    <span class="accent-dot" aria-hidden="true"></span>
+    <span class="toast-message" id="toastMessage">Equipped Astro</span>
+    <button type="button" class="toast-jump-btn" id="toastJumpBtn">Jump to Stage &uarr;</button>
+    <button type="button" class="toast-dismiss-btn" id="toastDismissBtn" aria-label="Dismiss notification">
+      <svg width="12" height="12" viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.3">
+        <line x1="2" y1="2" x2="8" y2="8"></line>
+        <line x1="8" y1="2" x2="2" y2="8"></line>
+      </svg>
+    </button>
+  </div>
+
+  <!-- Scroll-Triggered Compact Download Pill -->
+  <div id="floatingCtaPill" class="floating-cta" aria-hidden="true">
+    <div class="floating-cta-meta">
+      <span class="accent-dot" aria-hidden="true"></span>
+      <span>TinyHand v1.0.0 &middot; 112 MB</span>
+    </div>
+    <a href="https://github.com/wajahat-alip/tinyhand-windows/releases/download/v1.0.0/TinyHandWindows.exe" class="btn btn-primary btn-xs" data-download-cta tabindex="-1" id="floatingDownloadBtn">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+        <polyline points="7 10 12 15 17 10"></polyline>
+        <line x1="12" y1="15" x2="12" y2="3"></line>
+      </svg>
+      <span>Download .exe</span>
+    </a>
+  </div>
 
   <!-- Scripts -->
   <script src="js/interactive-pointer.js"></script>
